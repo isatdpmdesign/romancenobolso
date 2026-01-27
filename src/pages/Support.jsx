@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/lib/supabase';
+import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -33,7 +34,6 @@ import {
 } from "lucide-react";
 import { motion} from 'framer-motion';
 import { toast } from "sonner";
-import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 
 const CATEGORY_ICONS = {
@@ -75,22 +75,48 @@ export default function Support() {
   const [submitted, setSubmitted] = useState(false);
 
   useEffect(() => {
-    base44.auth.me().then(setUser).catch(() => setUser(null));
+    supabase.auth.getUser().then(({ data: { user: u } }) => {
+      setUser(u);
+    }).catch(() => setUser(null));
   }, []);
 
   const { data: faqs = [] } = useQuery({
     queryKey: ['faqs'],
-    queryFn: () => base44.entities.FAQ.filter({ is_active: true }, 'order')
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('faq')
+        .select('*')
+        .eq('is_active', true)
+        .order('order');
+      if (error) throw error;
+      return data || [];
+    }
   });
 
   const { data: myTickets = [] } = useQuery({
     queryKey: ['myTickets', user?.email],
-    queryFn: () => base44.entities.SupportTicket.filter({ user_email: user.email }, '-created_date'),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('support_ticket')
+        .select('*')
+        .eq('user_email', user.email)
+        .order('created_date', { ascending: false });
+      if (error) throw error;
+      return data || [];
+    },
     enabled: !!user
   });
 
   const createTicketMutation = useMutation({
-    mutationFn: (data) => base44.entities.SupportTicket.create(data),
+    mutationFn: async (data) => {
+      const { data: result, error } = await supabase
+        .from('support_ticket')
+        .insert(data)
+        .select()
+        .single();
+      if (error) throw error;
+      return result;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries(['myTickets']);
       setSubmitted(true);
@@ -101,7 +127,7 @@ export default function Support() {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!user) {
-      base44.auth.redirectToLogin(window.location.href);
+      navigate('/Login');
       return;
     }
     if (!formData.subject || !formData.message || !formData.category) {

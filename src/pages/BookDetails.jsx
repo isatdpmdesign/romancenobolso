@@ -110,9 +110,19 @@ export default function BookDetails() {
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl overflow-hidden mb-10">
           <div className="p-6 md:p-8">
             <div className="flex gap-6">
+              
+              {/* --- TRAVA DE SEGURANÇA DA IMAGEM --- */}
               {book.capa_vertical_url && (
-                <img src={book.capa_vertical_url} alt={book.titulo} className="w-24 md:w-32 rounded-lg shadow-lg flex-shrink-0" />
+                <div className="relative w-24 min-w-[96px] md:w-32 md:min-w-[128px] aspect-[2/3] rounded-lg shadow-lg overflow-hidden flex-shrink-0 bg-gray-100 dark:bg-gray-700">
+                  <img 
+                    src={book.capa_vertical_url} 
+                    alt={book.titulo} 
+                    className="absolute inset-0 w-full h-full object-cover" 
+                  />
+                </div>
               )}
+              {/* --- FIM DA TRAVA --- */}
+
               <div className="flex-1 min-w-0">
                 <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-2">{book.titulo}</h1>
                 <p className="text-lg text-gray-600 dark:text-gray-400 mb-3">por {book.autor}</p>
@@ -127,7 +137,7 @@ export default function BookDetails() {
                   <span className="text-sm text-gray-600 font-medium">📖 {chapters.length} capítulos</span>
                 </div>
 
-                {/* SELECT DE CAPÍTULOS NO ESPAÇO CIRCULADO */}
+                {/* SELECT DE CAPÍTULOS */}
                 {chapters.length > 0 && (
                   <div className="relative w-full md:w-64 mt-4">
                     <select 

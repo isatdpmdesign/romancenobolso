@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import { supabase } from '@/lib/supabase';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -15,7 +15,15 @@ export default function ChapterReviewForm({ chapterId, bookId, user, onSuccess }
   const queryClient = useQueryClient();
 
   const createReviewMutation = useMutation({
-    mutationFn: (data) => base44.entities.ChapterReview.create(data),
+    mutationFn: async (data) => {
+      const { data: result, error } = await supabase
+        .from('chapter_review')
+        .insert(data)
+        .select()
+        .single();
+      if (error) throw error;
+      return result;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries(['reviews', chapterId]);
       setRating(0);

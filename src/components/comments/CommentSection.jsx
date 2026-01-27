@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import { supabase } from '@/lib/supabase';
+import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -10,18 +11,36 @@ import { toast } from "sonner";
 
 export default function CommentSection({ chapterId, bookId, user }) {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [newComment, setNewComment] = useState('');
   const [replyingTo, setReplyingTo] = useState(null);
   const [replyContent, setReplyContent] = useState('');
 
   const { data: comments = [] } = useQuery({
     queryKey: ['comments', chapterId],
-    queryFn: () => base44.entities.Comment.filter({ chapter_id: chapterId, status: 'approved' }, '-created_date'),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('comment')
+        .select('*')
+        .eq('chapter_id', chapterId)
+        .eq('status', 'approved')
+        .order('created_date', { ascending: false });
+      if (error) throw error;
+      return data || [];
+    },
     enabled: !!chapterId
   });
 
   const createCommentMutation = useMutation({
-    mutationFn: (data) => base44.entities.Comment.create(data),
+    mutationFn: async (data) => {
+      const { data: result, error } = await supabase
+        .from('comment')
+        .insert(data)
+        .select()
+        .single();
+      if (error) throw error;
+      return result;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries(['comments', chapterId]);
       setNewComment('');
@@ -33,7 +52,7 @@ export default function CommentSection({ chapterId, bookId, user }) {
 
   const handleSubmitComment = () => {
     if (!user) {
-      base44.auth.redirectToLogin(window.location.href);
+      navigate('/Login');
       return;
     }
     if (!newComment.trim()) return;
@@ -50,7 +69,7 @@ export default function CommentSection({ chapterId, bookId, user }) {
 
   const handleSubmitReply = (parentId, parentUserEmail) => {
     if (!user) {
-      base44.auth.redirectToLogin(window.location.href);
+      navigate('/Login');
       return;
     }
     if (!replyContent.trim()) return;
@@ -67,12 +86,14 @@ export default function CommentSection({ chapterId, bookId, user }) {
 
     // Criar notificação para o autor do comentário original
     if (parentUserEmail !== user.email) {
-      base44.entities.Notification.create({
+      supabase.from('notification').insert({
         user_email: parentUserEmail,
         type: 'comment_reply',
         title: 'Nova resposta ao seu comentário',
-        message: `${user.nickname || user.full_name || 'Alguém'} respondeu ao seu comentário`,
+        message: `${user.user_metadata?.full_name || user.email?.split('@')[0] || 'Alguém'} respondeu ao seu comentário`,
         link: window.location.href
+      }).then(({ error }) => {
+        if (error) console.error('Erro ao criar notificação:', error);
       });
     }
   };

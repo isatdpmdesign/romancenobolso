@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/lib/supabase';
+import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { 
@@ -13,7 +14,6 @@ import {
   Trash2
 } from "lucide-react";
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate, Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 
 const TYPE_CONFIG = {
@@ -45,33 +45,63 @@ export default function Notifications() {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    base44.auth.me().then(setUser).catch(() => {
-      base44.auth.redirectToLogin(window.location.href);
+    supabase.auth.getUser().then(({ data: { user: u } }) => {
+      setUser(u);
+    }).catch(() => {
+      navigate('/Login');
     });
-  }, []);
+  }, [navigate]);
 
   const { data: notifications = [], isLoading } = useQuery({
     queryKey: ['notifications', user?.email],
-    queryFn: () => base44.entities.Notification.filter({ user_email: user.email }, '-created_date'),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('notification')
+        .select('*')
+        .eq('user_email', user.email)
+        .order('created_date', { ascending: false });
+      if (error) throw error;
+      return data || [];
+    },
     enabled: !!user
   });
 
   const markAsReadMutation = useMutation({
-    mutationFn: (id) => base44.entities.Notification.update(id, { is_read: true }),
-    onSuccess: () => queryClient.invalidateQueries(['notifications'])
+    mutationFn: async (id) => {
+      const { data: result, error } = await supabase
+        .from('notification')
+        .update({ is_read: true })
+        .eq('id', id)
+        .select()
+        .single();
+      if (error) throw error;
+      return result;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['notifications'] })
   });
 
   const markAllAsReadMutation = useMutation({
     mutationFn: async () => {
       const unread = notifications.filter(n => !n.is_read);
-      await Promise.all(unread.map(n => base44.entities.Notification.update(n.id, { is_read: true })));
+      const { error } = await supabase
+        .from('notification')
+        .update({ is_read: true })
+        .in('id', unread.map(n => n.id));
+      if (error) throw error;
     },
-    onSuccess: () => queryClient.invalidateQueries(['notifications'])
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['notifications'] })
   });
 
   const deleteNotificationMutation = useMutation({
-    mutationFn: (id) => base44.entities.Notification.delete(id),
-    onSuccess: () => queryClient.invalidateQueries(['notifications'])
+    mutationFn: async (id) => {
+      const { error } = await supabase
+        .from('notification')
+        .delete()
+        .eq('id', id);
+      if (error) throw error;
+      return id;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['notifications'] })
   });
 
   const handleNotificationClick = (notification) => {

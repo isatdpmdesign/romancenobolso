@@ -1,4 +1,4 @@
-import { base44 } from '@/api/base44Client';
+import { supabase } from '@/lib/supabase';
 
 // E-mails excluídos do rastreamento
 const EXCLUDED_EMAILS = [
@@ -12,7 +12,7 @@ const EXCLUDED_EMAILS = [
  */
 export async function trackEvent(eventName, properties = {}) {
   try {
-    const user = await base44.auth.me();
+    const { data: { user } } = await supabase.auth.getUser();
     
     // Se o usuário estiver na lista de exclusão, não rastreia
     if (user && EXCLUDED_EMAILS.includes(user.email)) {
@@ -23,9 +23,12 @@ export async function trackEvent(eventName, properties = {}) {
     // Usuário não logado, segue com o tracking
   }
   
-  // Rastreia o evento normalmente
-  base44.analytics.track({
-    eventName,
-    properties
-  });
+  // Nota: Analytics precisa ser implementado via serviço externo (Google Analytics, Mixpanel, etc.)
+  // Por enquanto, apenas logamos no console
+  console.log('[Analytics]', eventName, properties);
+  
+  // Exemplo de integração futura:
+  // if (window.gtag) {
+  //   window.gtag('event', eventName, properties);
+  // }
 }

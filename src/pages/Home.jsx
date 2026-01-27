@@ -76,7 +76,7 @@ export default function Home() {
            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">
              Olá, {user?.user_metadata?.name || 'Leitor(a)'} 👋
            </h1>
-           <p className="text-gray-500 text-lg">Qual história vamos viver hoje?</p>
+           <p className="text-gray-500 text-lg">Qual história vamos ler hoje?</p>
         </div>
       )}
 

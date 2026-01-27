@@ -18,21 +18,29 @@ export default function BookCard({ book, hasAudio }) {
   
   return (
     <Link to={isComingSoon ? '#' : createPageUrl('BookDetails') + `?id=${book.id}`} onClick={(e) => isComingSoon && e.preventDefault()}>
-      <Card className={`group overflow-hidden bg-white dark:bg-gray-800 hover:shadow-2xl transition-all duration-300 cursor-pointer transform hover:-translate-y-2 h-full border-0 shadow-md ${isComingSoon ? 'opacity-90' : ''}`}>
-        <div className="relative aspect-[2/3] overflow-hidden bg-gradient-to-br from-[#E8EEFB] to-[#FFE5EE]">
+      {/* Removi o h-full daqui para o cartão poder crescer se precisar */}
+      <Card className={`group flex flex-col overflow-hidden bg-white dark:bg-gray-800 hover:shadow-2xl transition-all duration-300 cursor-pointer transform hover:-translate-y-2 border-0 shadow-md ${isComingSoon ? 'opacity-90' : ''}`}>
+        
+        {/* SOLUÇÃO DEFINITIVA:
+            - aspect-[2/3]: Tenta manter o formato de livro.
+            - min-h-[280px]: A TRAVA DE SEGURANÇA. Em telas muito estreitas, ele força essa altura mínima e impede o achatamento.
+        */}
+        <div className="relative w-full aspect-[2/3] min-h-[280px] overflow-hidden bg-gradient-to-br from-[#E8EEFB] to-[#FFE5EE]">
           {book.cover_image ? (
             <img
               src={book.cover_image}
               alt={book.title}
-              className={`w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 ${isComingSoon ? 'grayscale-[30%]' : ''}`}
+              /* O object-cover aqui garante que a imagem preencha o espaço da trava sem distorcer */
+              className={`absolute inset-0 w-full h-full object-cover object-top group-hover:scale-110 transition-transform duration-500 ${isComingSoon ? 'grayscale-[30%]' : ''}`}
               loading="lazy"
               decoding="async"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center">
+            <div className="absolute inset-0 flex items-center justify-center">
               <BookOpen className="w-20 h-20 text-[#3065DF]/30" />
             </div>
           )}
+          
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
           
           {/* Badge Em Breve */}
@@ -59,7 +67,7 @@ export default function BookCard({ book, hasAudio }) {
           )}
         </div>
         
-        <div className="p-4 space-y-2">
+        <div className="p-4 space-y-2 flex-grow">
           <h3 className="font-semibold text-lg line-clamp-2 text-gray-900 dark:text-white group-hover:text-[#FF0864] transition-colors">
             {book.title}
           </h3>

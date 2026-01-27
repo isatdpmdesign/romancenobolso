@@ -21,7 +21,7 @@ export default function MyBooks() {
       try {
         // 1. Buscamos na tabela 'user_books' usando o e-mail do usuário
         // 2. Trazemos os dados da tabela vinculada 'livros'
-        const { data, error } = await await supabase
+        const { data, error } = await supabase
           .from('user_books') 
           .select(`
             *,

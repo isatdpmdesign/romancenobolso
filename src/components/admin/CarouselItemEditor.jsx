@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { base44 } from '@/api/base44Client';
+import { supabase } from '@/lib/supabase';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -34,9 +34,23 @@ export default function CarouselItemEditor({ featured, book, onUpdate, onClose }
     
     setIsUploadingDesktop(true);
     try {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
-      setFormData({ ...formData, background_image: file_url });
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random()}.${fileExt}`;
+      const filePath = `carousel/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('images')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage
+        .from('images')
+        .getPublicUrl(filePath);
+
+      setFormData({ ...formData, background_image: data.publicUrl });
     } catch (error) {
+      console.error('Erro ao enviar imagem:', error);
       alert('Erro ao enviar imagem');
     } finally {
       setIsUploadingDesktop(false);
@@ -49,9 +63,23 @@ export default function CarouselItemEditor({ featured, book, onUpdate, onClose }
     
     setIsUploadingMobile(true);
     try {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
-      setFormData({ ...formData, background_image_mobile: file_url });
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random()}.${fileExt}`;
+      const filePath = `carousel/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('images')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage
+        .from('images')
+        .getPublicUrl(filePath);
+
+      setFormData({ ...formData, background_image_mobile: data.publicUrl });
     } catch (error) {
+      console.error('Erro ao enviar imagem:', error);
       alert('Erro ao enviar imagem');
     } finally {
       setIsUploadingMobile(false);

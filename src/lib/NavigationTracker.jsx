@@ -1,7 +1,6 @@
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from './AuthContext';
-import { base44 } from '@/api/base44Client';
 import { pagesConfig } from '@/pages.config';
 
 export default function NavigationTracker() {
@@ -40,9 +39,9 @@ export default function NavigationTracker() {
         }
 
         if (isAuthenticated && pageName) {
-            base44.appLogs.logUserInApp(pageName).catch(() => {
-                // Silently fail - logging shouldn't break the app
-            });
+            // Nota: Logging de navegação pode ser implementado via edge function ou analytics
+            // Por enquanto, apenas logamos no console para debug
+            console.log('User navigated to:', pageName);
         }
     }, [location, isAuthenticated, Pages, mainPageKey]);
 

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import { supabase } from '@/lib/supabase';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
@@ -19,16 +19,23 @@ export default function Payment() {
   const status = urlParams.get('status');
 
   useEffect(() => {
-    base44.auth.me().then(setUser).catch(() => {
-      base44.auth.redirectToLogin(window.location.href);
+    supabase.auth.getUser().then(({ data: { user: u } }) => {
+      setUser(u);
+    }).catch(() => {
+      navigate('/Login');
     });
   }, []);
 
   const { data: book } = useQuery({
     queryKey: ['book', bookId],
     queryFn: async () => {
-      const books = await base44.entities.Book.list();
-      return books.find(b => b.id === bookId);
+      const { data, error } = await supabase
+        .from('book')
+        .select('*')
+        .eq('id', bookId)
+        .single();
+      if (error) throw error;
+      return data;
     },
     enabled: !!bookId
   });
@@ -45,22 +52,28 @@ export default function Payment() {
         try {
           console.log(`🔍 Tentativa ${attempts + 1}/${maxAttempts} - Verificando compra...`);
           
-          const purchases = await base44.entities.Purchase.filter({
-            user_email: user.email,
-            book_id: bookId,
-            status: 'completed'
-          });
+          const { data: purchases, error: purchaseError } = await supabase
+            .from('purchase')
+            .select('*')
+            .eq('user_email', user.email)
+            .eq('book_id', bookId)
+            .eq('status', 'completed');
+          
+          if (purchaseError) throw purchaseError;
 
           console.log('📦 Compras encontradas:', purchases.length);
 
           if (purchases.length > 0) {
             console.log('✅ Compra confirmada! Redirecionando...');
             
-            const chapters = await base44.entities.Chapter.filter(
-              { book_id: bookId }, 
-              'chapter_number', 
-              1
-            );
+            const { data: chapters, error: chapterError } = await supabase
+              .from('chapter')
+              .select('*')
+              .eq('book_id', bookId)
+              .order('chapter_number', { ascending: true })
+              .limit(1);
+            
+            if (chapterError) throw chapterError;
 
             if (chapters.length > 0) {
               queryClient.invalidateQueries(['purchases']);

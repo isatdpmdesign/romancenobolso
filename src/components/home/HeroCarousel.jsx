@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ChevronLeft, ChevronRight, BookOpen, Headphones, Bell, Check } from "lucide-react";
 import { motion, AnimatePresence } from 'framer-motion';
-import { base44 } from '@/api/base44Client';
+import { supabase } from '@/lib/supabase';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
@@ -33,16 +33,32 @@ export default function HeroCarousel({ books, booksWithAudio, featuredData = [],
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
   const isMobile = useIsMobile();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   // Fetch book interests para o usuário atual
   const { data: bookInterests = [] } = useQuery({
     queryKey: ['bookInterests', user?.email],
-    queryFn: () => base44.entities.BookInterest.filter({ user_email: user.email }),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('book_interest')
+        .select('*')
+        .eq('user_email', user.email);
+      if (error) throw error;
+      return data || [];
+    },
     enabled: !!user
   });
 
   const addInterestMutation = useMutation({
-    mutationFn: (data) => base44.entities.BookInterest.create(data),
+    mutationFn: async (data) => {
+      const { data: result, error } = await supabase
+        .from('book_interest')
+        .insert(data)
+        .select()
+        .single();
+      if (error) throw error;
+      return result;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries(['bookInterests']);
       toast.success('✅ Você será notificado quando o livro for lançado!');
@@ -51,7 +67,7 @@ export default function HeroCarousel({ books, booksWithAudio, featuredData = [],
 
   const handleNotifyMe = (bookId) => {
     if (!user) {
-      base44.auth.redirectToLogin(window.location.href);
+      navigate('/Login');
       return;
     }
     

@@ -1,5 +1,5 @@
 import React from 'react';
-import { base44 } from '@/api/base44Client';
+import { supabase } from '@/lib/supabase';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from "@/components/ui/button";
 import { Bell } from "lucide-react";
@@ -9,7 +9,15 @@ import { createPageUrl } from '@/utils';
 export default function NotificationBell({ userEmail }) {
   const { data: notifications = [] } = useQuery({
     queryKey: ['notifications', userEmail],
-    queryFn: () => base44.entities.Notification.filter({ user_email: userEmail, is_read: false }),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('notification')
+        .select('*')
+        .eq('user_email', userEmail)
+        .eq('is_read', false);
+      if (error) throw error;
+      return data || [];
+    },
     enabled: !!userEmail,
     refetchInterval: 30000 // Atualiza a cada 30 segundos
   });

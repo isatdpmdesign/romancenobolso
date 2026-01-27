@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/lib/supabase';
 import { createPageUrl } from '@/utils';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -62,9 +62,14 @@ export default function AdminSupport() {
   const [responseText, setResponseText] = useState('');
 
   useEffect(() => {
-    base44.auth.me()
-      .then((u) => {
-        if (u.role !== 'admin') {
+    supabase.auth.getUser()
+      .then(({ data: { user: u }, error }) => {
+        if (error || !u) {
+          navigate(createPageUrl('Home'));
+          return;
+        }
+        // Verificar se é admin (ajustar conforme sua lógica de admin)
+        if (u.email !== 'isaduarte.design@gmail.com') {
           navigate(createPageUrl('Home'));
           return;
         }
@@ -77,24 +82,54 @@ export default function AdminSupport() {
   // FAQs
   const { data: faqs = [] } = useQuery({
     queryKey: ['adminFaqs'],
-    queryFn: () => base44.entities.FAQ.list('order')
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('faq')
+        .select('*')
+        .order('order');
+      if (error) throw error;
+      return data || [];
+    }
   });
 
   // Tickets
   const { data: tickets = [] } = useQuery({
     queryKey: ['adminTickets'],
-    queryFn: () => base44.entities.SupportTicket.list('-created_date')
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('support_ticket')
+        .select('*')
+        .order('created_date', { ascending: false });
+      if (error) throw error;
+      return data || [];
+    }
   });
 
   // Comments for moderation
   const { data: pendingComments = [] } = useQuery({
     queryKey: ['pendingComments'],
-    queryFn: () => base44.entities.Comment.filter({ status: 'pending' }, '-created_date')
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('comment')
+        .select('*')
+        .eq('status', 'pending')
+        .order('created_date', { ascending: false });
+      if (error) throw error;
+      return data || [];
+    }
   });
 
   // FAQ Mutations
   const createFaqMutation = useMutation({
-    mutationFn: (data) => base44.entities.FAQ.create(data),
+    mutationFn: async (data) => {
+      const { data: result, error } = await supabase
+        .from('faq')
+        .insert(data)
+        .select()
+        .single();
+      if (error) throw error;
+      return result;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries(['adminFaqs']);
       resetFaqForm();
@@ -103,7 +138,16 @@ export default function AdminSupport() {
   });
 
   const updateFaqMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.FAQ.update(id, data),
+    mutationFn: async ({ id, data }) => {
+      const { data: result, error } = await supabase
+        .from('faq')
+        .update(data)
+        .eq('id', id)
+        .select()
+        .single();
+      if (error) throw error;
+      return result;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries(['adminFaqs']);
       resetFaqForm();
@@ -112,7 +156,14 @@ export default function AdminSupport() {
   });
 
   const deleteFaqMutation = useMutation({
-    mutationFn: (id) => base44.entities.FAQ.delete(id),
+    mutationFn: async (id) => {
+      const { error } = await supabase
+        .from('faq')
+        .delete()
+        .eq('id', id);
+      if (error) throw error;
+      return id;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries(['adminFaqs']);
       toast.success('FAQ excluída!');
@@ -122,25 +173,32 @@ export default function AdminSupport() {
   // Ticket Mutations
   const respondTicketMutation = useMutation({
     mutationFn: async ({ id, response, userEmail }) => {
-      await base44.entities.SupportTicket.update(id, {
-        admin_response: response,
-        status: 'respondido',
-        responded_at: new Date().toISOString()
-      });
+      // Atualizar ticket
+      const { error: ticketError } = await supabase
+        .from('support_ticket')
+        .update({
+          admin_response: response,
+          status: 'respondido',
+          responded_at: new Date().toISOString()
+        })
+        .eq('id', id);
+      if (ticketError) throw ticketError;
+
       // Enviar notificação
-      await base44.entities.Notification.create({
-        user_email: userEmail,
-        type: 'support_response',
-        title: 'Resposta do Suporte',
-        message: 'Sua solicitação foi respondida pela nossa equipe.',
-        link: createPageUrl('Support')
-      });
-      // Enviar email
-      await base44.integrations.Core.SendEmail({
-        to: userEmail,
-        subject: 'Resposta do Suporte - Romance no Bolso',
-        body: `Olá!\n\nSua solicitação foi respondida:\n\n${response}\n\nAtenciosamente,\nEquipe Romance no Bolso`
-      });
+      const { error: notifError } = await supabase
+        .from('notification')
+        .insert({
+          user_email: userEmail,
+          type: 'support_response',
+          title: 'Resposta do Suporte',
+          message: 'Sua solicitação foi respondida pela nossa equipe.',
+          link: createPageUrl('Support')
+        });
+      if (notifError) throw notifError;
+
+      // Nota: Envio de email precisa ser implementado via edge function ou serviço externo
+      // Por enquanto, apenas logamos
+      console.log('Email deveria ser enviado para:', userEmail);
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['adminTickets']);
@@ -152,7 +210,16 @@ export default function AdminSupport() {
 
   // Comment Mutations
   const approveCommentMutation = useMutation({
-    mutationFn: (id) => base44.entities.Comment.update(id, { status: 'approved' }),
+    mutationFn: async (id) => {
+      const { data: result, error } = await supabase
+        .from('comment')
+        .update({ status: 'approved' })
+        .eq('id', id)
+        .select()
+        .single();
+      if (error) throw error;
+      return result;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries(['pendingComments']);
       toast.success('Comentário aprovado!');
@@ -160,7 +227,16 @@ export default function AdminSupport() {
   });
 
   const rejectCommentMutation = useMutation({
-    mutationFn: (id) => base44.entities.Comment.update(id, { status: 'rejected' }),
+    mutationFn: async (id) => {
+      const { data: result, error } = await supabase
+        .from('comment')
+        .update({ status: 'rejected' })
+        .eq('id', id)
+        .select()
+        .single();
+      if (error) throw error;
+      return result;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries(['pendingComments']);
       toast.success('Comentário rejeitado!');
