@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { Button } from "@/components/ui/button";
@@ -16,15 +16,14 @@ export default function Payment() {
 
   const urlParams = new URLSearchParams(window.location.search);
   const bookId = urlParams.get('bookId');
-  const status = urlParams.get('status');
+  const sessionId = urlParams.get('session_id'); // Stripe usa session_id
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user: u } }) => {
+      if (!u) navigate('/Login');
       setUser(u);
-    }).catch(() => {
-      navigate('/Login');
-    });
-  }, []);
+    }).catch(() => navigate('/Login'));
+  }, [navigate]);
 
   const { data: book } = useQuery({
     queryKey: ['book', bookId],
@@ -40,78 +39,55 @@ export default function Payment() {
     enabled: !!bookId
   });
 
-  // Verificar status do retorno do Mercado Pago
+  // Verificador de Compra (Sincronizado com o Webhook do Stripe)
   useEffect(() => {
-    if (status === 'success' && user && bookId && book) {
-      console.log('✅ Retorno do Mercado Pago - Status: success');
+    if (sessionId && user && bookId && book) {
+      console.log('🔍 Stripe detectado. Verificando liberação do livro...');
       
       let attempts = 0;
-      const maxAttempts = 20;
+      const maxAttempts = 15;
 
       const checkPurchase = async () => {
         try {
-          console.log(`🔍 Tentativa ${attempts + 1}/${maxAttempts} - Verificando compra...`);
-          
-          const { data: purchases, error: purchaseError } = await supabase
+          const { data: purchases, error } = await supabase
             .from('purchase')
             .select('*')
             .eq('user_email', user.email)
             .eq('book_id', bookId)
             .eq('status', 'completed');
           
-          if (purchaseError) throw purchaseError;
+          if (error) throw error;
 
-          console.log('📦 Compras encontradas:', purchases.length);
-
-          if (purchases.length > 0) {
-            console.log('✅ Compra confirmada! Redirecionando...');
+          if (purchases && purchases.length > 0) {
+            console.log('✅ Compra confirmada via Webhook!');
             
-            const { data: chapters, error: chapterError } = await supabase
+            const { data: chapters } = await supabase
               .from('chapter')
-              .select('*')
+              .select('id')
               .eq('book_id', bookId)
               .order('chapter_number', { ascending: true })
               .limit(1);
             
-            if (chapterError) throw chapterError;
-
-            if (chapters.length > 0) {
+            if (chapters && chapters.length > 0) {
               queryClient.invalidateQueries(['purchases']);
-              queryClient.invalidateQueries(['myPurchases']);
               setPaymentSuccess(true);
               
               setTimeout(() => {
                 navigate(createPageUrl('Reader') + `?bookId=${bookId}&chapterId=${chapters[0].id}`);
-              }, 2000);
+              }, 2500);
             }
           } else if (attempts < maxAttempts) {
             attempts++;
-            console.log(`⏳ Compra ainda não registrada. Tentando novamente em 3s...`);
-            setTimeout(checkPurchase, 3000);
-          } else {
-            console.log('❌ Timeout: Compra não foi confirmada após 20 tentativas');
-            alert('O pagamento está sendo processado. Você receberá um email quando for confirmado.');
-            navigate(createPageUrl('BookDetails') + `?id=${bookId}`);
+            setTimeout(checkPurchase, 3000); // Tenta a cada 3 segundos
           }
-        } catch (error) {
-          console.error('❌ Erro ao verificar compra:', error);
-          attempts++;
-          if (attempts < maxAttempts) {
-            setTimeout(checkPurchase, 3000);
-          }
+        } catch (err) {
+          console.error('Erro na verificação:', err);
         }
       };
 
       checkPurchase();
-    } else if (status === 'failure' && bookId) {
-      console.log('❌ Pagamento falhou');
-      alert('O pagamento não foi aprovado. Tente novamente.');
-    } else if (status === 'pending' && bookId) {
-      console.log('⏳ Pagamento pendente');
-      alert('Seu pagamento está pendente de aprovação. Você receberá um email quando for confirmado.');
-      navigate(createPageUrl('BookDetails') + `?id=${bookId}`);
     }
-  }, [status, user, bookId, book]);
+  }, [sessionId, user, bookId, book, navigate, queryClient]);
 
   if (!book || !user) {
     return (
@@ -124,37 +100,12 @@ export default function Payment() {
   if (paymentSuccess) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-teal-50 dark:from-gray-900 dark:to-gray-800">
-        <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ type: "spring", duration: 0.5 }}
-          className="text-center space-y-6"
-        >
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 0.2, type: "spring" }}
-            className="w-24 h-24 bg-teal-500 rounded-full flex items-center justify-center mx-auto"
-          >
+        <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="text-center space-y-6">
+          <div className="w-24 h-24 bg-teal-500 rounded-full flex items-center justify-center mx-auto">
             <CheckCircle2 className="w-16 h-16 text-white" />
-          </motion.div>
-          <div>
-            <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-              Pagamento Confirmado! 🎉
-            </h2>
-            <p className="text-gray-600 dark:text-gray-400">
-              Agora você tem acesso completo a todos os capítulos.
-            </p>
           </div>
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
-          >
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              Redirecionando...
-            </p>
-          </motion.div>
+          <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Pagamento Confirmado! 🎉</h2>
+          <p className="text-gray-600 dark:text-gray-400">Boa leitura, a história de {book.title} espera por você.</p>
         </motion.div>
       </div>
     );
@@ -162,42 +113,14 @@ export default function Payment() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#FFF8FA] to-[#E8EEFB] dark:from-gray-900 dark:to-gray-800">
-      <div className="sticky top-0 z-30 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm shadow-sm">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <Button
-            variant="ghost"
-            onClick={() => navigate(createPageUrl('BookDetails') + `?id=${bookId}`)}
-            className="hover:bg-[#FFE5EE]"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Voltar
-          </Button>
-        </div>
+      <div className="max-w-7xl mx-auto px-6 py-4">
+        <Button variant="ghost" onClick={() => navigate(-1)} className="hover:bg-[#FFE5EE]">
+          <ArrowLeft className="w-4 h-4 mr-2" /> Voltar
+        </Button>
       </div>
-
-      <div className="max-w-7xl mx-auto px-6 py-12">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <div className="text-center mb-12">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-[#FFE5EE] dark:bg-pink-900/30 rounded-full mb-6">
-              <span className="text-3xl">🔓</span>
-            </div>
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-3">
-              Desbloqueie todos os capítulos
-            </h1>
-            <p className="text-gray-600 dark:text-gray-400 text-lg mb-2">
-              Continue lendo "{book.title}" sem interrupções
-            </p>
-            <p className="text-[#3065DF] font-medium">
-              Complete sua compra abaixo
-            </p>
-          </div>
-
-          <PaymentForm book={book} />
-        </motion.div>
+      <div className="max-w-7xl mx-auto px-6 py-12 text-center">
+        <h1 className="text-3xl font-bold mb-6">Desbloqueie "{book.title}"</h1>
+        <PaymentForm book={book} />
       </div>
     </div>
   );
