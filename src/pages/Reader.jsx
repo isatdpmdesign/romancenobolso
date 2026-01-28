@@ -241,7 +241,9 @@ export default function Reader() {
             {chapter.imagem_url && <img src={chapter.imagem_url} className="w-full rounded-xl sm:rounded-2xl mb-6 sm:mb-8 md:mb-10 shadow-sm" alt="Cena" />}
             {chapter.audio_url && <div className="mb-8 sm:mb-10 md:mb-12"><AudioPlayer audioUrl={chapter.audio_url} chapterTitle={chapter.titulo} /></div>}
             <div className="mb-8 sm:mb-12" style={{ color: currentTheme.text }}>
-              <span className="text-[10px] uppercase tracking-[0.2em] opacity-50 font-bold block mb-2 sm:mb-3">Capítulo {chapter.ordem}</span>
+              <span className="text-[10px] uppercase tracking-[0.2em] opacity-50 font-bold block mb-2 sm:mb-3">
+                {book.titulo} • Capítulo {chapter.ordem}
+              </span>
               <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-semibold leading-tight tracking-tight" style={{ fontFamily: currentFont }}>{chapter.titulo}</h2>
             </div>
             <div className="reader-content">
@@ -252,9 +254,11 @@ export default function Reader() {
           </>
         ) : (
           <>
-            <div className="mb-12" style={{ color: currentTheme.text }}>
-              <span className="text-[10px] uppercase tracking-[0.2em] opacity-50 font-bold block mb-3">Capítulo {chapter.ordem}</span>
-              <h2 className="text-3xl md:text-5xl font-semibold leading-tight tracking-tight" style={{ fontFamily: currentFont }}>{chapter.titulo}</h2>
+            <div className="mb-8 sm:mb-12" style={{ color: currentTheme.text }}>
+              <span className="text-[10px] uppercase tracking-[0.2em] opacity-50 font-bold block mb-2 sm:mb-3">
+                {book.titulo} • Capítulo {chapter.ordem}
+              </span>
+              <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-semibold leading-tight tracking-tight" style={{ fontFamily: currentFont }}>{chapter.titulo}</h2>
             </div>
             <div className="py-16 rounded-2xl bg-gray-100/80 dark:bg-gray-800/50 flex flex-col items-center justify-center gap-4" style={{ color: currentTheme.text }}>
               <Lock className="w-12 h-12 opacity-40" />

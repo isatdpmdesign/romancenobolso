@@ -109,11 +109,11 @@ export default function BookDetails() {
       <div className={`max-w-3xl mx-auto px-3 sm:px-4 md:px-6 relative z-10 ${book.capa_url ? '-mt-16 sm:-mt-20 md:-mt-32' : 'mt-6 sm:mt-10'}`}>
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl shadow-2xl overflow-hidden mb-6 sm:mb-10">
           <div className="p-4 sm:p-6 md:p-8">
-            <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
+            <div className="flex flex-row gap-3 sm:gap-4 md:gap-6">
               
               {/* --- TRAVA DE SEGURANÇA DA IMAGEM --- */}
               {book.capa_vertical_url && (
-                <div className="relative w-20 h-30 sm:w-24 sm:h-36 md:w-32 md:h-48 mx-auto sm:mx-0 aspect-[2/3] rounded-lg shadow-lg overflow-hidden flex-shrink-0 bg-gray-100 dark:bg-gray-700">
+                <div className="relative w-16 h-24 sm:w-20 sm:h-30 md:w-24 md:h-36 lg:w-32 lg:h-48 aspect-[2/3] rounded-lg shadow-lg overflow-hidden flex-shrink-0 bg-gray-100 dark:bg-gray-700">
                   <img 
                     src={book.capa_vertical_url} 
                     alt={book.titulo} 
@@ -124,10 +124,16 @@ export default function BookDetails() {
               {/* --- FIM DA TRAVA --- */}
 
               <div className="flex-1 min-w-0">
-                <div className="flex items-start gap-2 sm:gap-3 mb-2">
-                  <h1 className="text-xl sm:text-2xl md:text-3xl font-semibold text-gray-900 dark:text-white flex-1 leading-tight">{book.titulo}</h1>
+                <div className="mb-2">
+                  <h1 className="text-xl sm:text-2xl md:text-3xl font-semibold text-gray-900 dark:text-white leading-tight">{book.titulo}</h1>
+                </div>
+                <p className="text-base sm:text-lg text-gray-600 dark:text-gray-400 mb-3">por {book.autor}</p>
+                
+                <div className="flex items-center gap-2 sm:gap-3 flex-wrap mb-4">
+                  <span className="bg-gray-100 text-gray-700 text-xs sm:text-sm px-2 sm:px-3 py-1 rounded-md font-normal">{book.categoria}</span>
+                  <span className="text-xs sm:text-sm text-gray-600 font-normal">📖 {chapters.length} capítulos</span>
                   {book.classificacao && (
-                    <span className={`text-[10px] sm:text-xs font-medium px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-md text-white shadow-sm flex-shrink-0 ${
+                    <span className={`text-[10px] sm:text-xs font-medium px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-md text-white shadow-sm ${
                       book.classificacao === 'Livre' ? 'bg-green-500' :
                       book.classificacao === '+10' || book.classificacao === '10+' ? 'bg-blue-500' :
                       book.classificacao === '+12' || book.classificacao === '12+' ? 'bg-yellow-500' :
@@ -140,12 +146,6 @@ export default function BookDetails() {
                     </span>
                   )}
                 </div>
-                <p className="text-base sm:text-lg text-gray-600 dark:text-gray-400 mb-3">por {book.autor}</p>
-                
-                <div className="flex items-center gap-2 sm:gap-3 flex-wrap mb-4">
-                  <span className="bg-gray-100 text-gray-700 text-xs sm:text-sm px-2 sm:px-3 py-1 rounded-md font-normal">{book.categoria}</span>
-                  <span className="text-xs sm:text-sm text-gray-600 font-normal">📖 {chapters.length} capítulos</span>
-                </div>
 
                 {/* SELECT DE CAPÍTULOS */}
                 {chapters.length > 0 && (
@@ -155,7 +155,7 @@ export default function BookDetails() {
                       className="w-full appearance-none bg-gray-50 border border-gray-200 text-gray-700 py-2.5 sm:py-3 pl-3 sm:pl-4 pr-8 sm:pr-10 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-purple-500 cursor-pointer hover:bg-white transition-all shadow-sm touch-manipulation"
                       defaultValue=""
                     >
-                      <option value="" disabled>Selecionar capítulo</option>
+                      <option value="" disabled>Capítulos</option>
                       {chapters.map((chapter, index) => (
                         <option key={chapter.id} value={chapter.id}>
                           {index + 1}. {chapter.titulo || `Capítulo ${chapter.ordem}`}
@@ -186,7 +186,7 @@ export default function BookDetails() {
           {book.sinopse && (
             <div className="border-t border-gray-100 p-4 sm:p-6 md:p-8 text-gray-700">
               <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-gray-900">Sinopse</h2>
-              <p className="leading-relaxed whitespace-pre-line text-xs sm:text-sm md:text-base">{book.sinopse}</p>
+              <p className="leading-relaxed whitespace-pre-line text-sm" style={{ fontSize: '14px' }}>{book.sinopse}</p>
             </div>
           )}
         </motion.div>
