@@ -202,9 +202,9 @@ export default function Reader() {
             <button type="button" onClick={() => navigate(`/BookDetails?id=${bookId}`)} title="Voltar" className="h-9 w-9 sm:h-10 sm:w-10 rounded-full flex items-center justify-center transition-all duration-150 hover:bg-black/5 active:scale-95 active:opacity-80 cursor-pointer pointer-events-auto select-auto touch-manipulation" style={{ color: currentTheme.text }}>
               <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5 pointer-events-none" />
             </button>
-            <button type="button" onClick={() => setShowChapters(true)} title="Sumário" className="h-9 sm:h-10 rounded-full flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 border bg-transparent transition-all duration-150 hover:bg-[#3065DF]/10 active:scale-[0.98] active:bg-[#3065DF]/15 cursor-pointer pointer-events-auto select-auto touch-manipulation" style={{ color: currentTheme.text, borderColor: 'transparent' }}>
-              <List className="w-3.5 h-3.5 sm:w-4 sm:h-4 pointer-events-none" />
-              <span className="text-xs sm:text-sm font-semibold pointer-events-none hidden xs:inline">Sumário</span>
+            <button type="button" onClick={() => setShowChapters(true)} title="Sumário" className="h-9 sm:h-10 rounded-full flex items-center justify-center gap-1.5 sm:gap-2 px-2 sm:px-3 md:px-4 border bg-transparent transition-all duration-150 hover:bg-[#3065DF]/10 active:scale-[0.98] active:bg-[#3065DF]/15 cursor-pointer pointer-events-auto select-auto touch-manipulation" style={{ color: currentTheme.text, borderColor: 'transparent' }}>
+              <List className="w-3.5 h-3.5 sm:w-4 sm:h-4 pointer-events-none flex-shrink-0" />
+              <span className="text-[10px] sm:text-xs md:text-sm font-semibold pointer-events-none whitespace-nowrap">todos os capítulos</span>
             </button>
           </div>
           <div className="flex items-center gap-1.5 sm:gap-2">
