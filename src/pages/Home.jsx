@@ -225,7 +225,7 @@ export default function Home() {
               <Search className="w-5 h-5 sm:w-6 sm:h-6 text-[#3065DF]" /> <span>Resultados para "{searchQuery}"</span>
             </h2>
             {filteredBooks.length > 0 ? (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4 md:gap-6">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-5 md:gap-6">
                     {filteredBooks.map((book, i) => (
                         <motion.div key={book.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.05 }}>
                             <BookCard book={book} hasAudio={booksWithAudio.has(book.id)} isAdmin={isAdminUser} />
@@ -242,7 +242,7 @@ export default function Home() {
           /* LISTAGEM POR SEÇÕES DA HOME */
           <div className="space-y-12">
             {isLoading ? (
-               <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
+               <div className="grid grid-cols-2 md:grid-cols-5 gap-4 sm:gap-5 md:gap-6">
                   {[...Array(5)].map((_, i) => <BookCardSkeleton key={i} />)}
                </div>
             ) : booksError ? (
@@ -270,7 +270,7 @@ export default function Home() {
                          <Sparkles className="w-6 h-6 text-[#3065DF]" />
                          <h2 className="text-2xl font-semibold text-[#1a1a1a]">Adicionados Recentemente</h2>
                        </div>
-                       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-x-6 gap-y-10">
+                       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-x-4 sm:gap-x-5 md:gap-x-6 gap-y-6 sm:gap-y-8 md:gap-y-10">
                          {processedBooks.map(book => (
                            <div key={book.id}>
                              <BookCard book={book} hasAudio={booksWithAudio.has(book.id)} isAdmin={isAdminUser} />
@@ -286,7 +286,7 @@ export default function Home() {
                        <Sparkles className="w-6 h-6 text-[#3065DF]" />
                        <h2 className="text-2xl font-semibold text-[#1a1a1a]">{section.nome}</h2>
                      </div>
-                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-x-6 gap-y-10">
+                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-x-4 sm:gap-x-5 md:gap-x-6 gap-y-6 sm:gap-y-8 md:gap-y-10">
                        {sectionBooks.map(book => (
                          <div key={book.id}>
                            <BookCard book={book} hasAudio={booksWithAudio.has(book.id)} isAdmin={isAdminUser} />
@@ -303,7 +303,7 @@ export default function Home() {
                         <Sparkles className="w-6 h-6 text-[#3065DF]" />
                         <h2 className="text-2xl font-semibold text-[#1a1a1a]">Adicionados Recentemente</h2>
                     </div>
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-x-6 gap-y-10">
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-x-4 sm:gap-x-5 md:gap-x-6 gap-y-6 sm:gap-y-8 md:gap-y-10">
                         {processedBooks.map(book => (
                             <div key={book.id}>
                                 <BookCard book={book} hasAudio={booksWithAudio.has(book.id)} isAdmin={isAdminUser} />
