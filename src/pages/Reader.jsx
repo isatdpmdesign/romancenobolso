@@ -271,7 +271,7 @@ export default function Reader() {
       {/* Modal capítulo bloqueado */}
       <Dialog open={!canRead && showLockedModal} onOpenChange={setShowLockedModal}>
         <DialogContent className="max-w-sm rounded-2xl sm:rounded-[32px] gap-0 p-0 overflow-hidden border-none shadow-2xl">
-          <div className="p-4 sm:p-6 md:p-8 pt-6 sm:pt-8 md:pt-10 text-center space-y-4 sm:space-y-5 md:space-y-6">
+          <div className="p-4 sm:p-6 md:p-8 pt-6 sm:pt-8 md:pt-10 pb-4 sm:pb-6 md:pb-8 text-center space-y-4 sm:space-y-5 md:space-y-6">
             <div className="w-16 h-16 sm:w-20 sm:h-20 bg-amber-50 rounded-full flex items-center justify-center mx-auto">
               <Lock className="w-8 h-8 sm:w-10 sm:h-10 text-amber-500" />
             </div>
@@ -293,7 +293,7 @@ export default function Reader() {
       {/* Modal de Login */}
       <Dialog open={showLoginModal} onOpenChange={setShowLoginModal}>
         <DialogContent className="max-w-sm rounded-2xl sm:rounded-[32px] gap-0 p-0 overflow-hidden border-none shadow-2xl">
-          <div className="p-4 sm:p-6 md:p-8 pt-6 sm:pt-8 md:pt-10 text-center space-y-4 sm:space-y-5 md:space-y-6">
+          <div className="p-4 sm:p-6 md:p-8 pt-6 sm:pt-8 md:pt-10 pb-4 sm:pb-6 md:pb-8 text-center space-y-4 sm:space-y-5 md:space-y-6">
             <div className="w-16 h-16 sm:w-20 sm:h-20 bg-blue-50 rounded-full flex items-center justify-center mx-auto">
               <Bookmark className="w-8 h-8 sm:w-10 sm:h-10 text-[#3065DF]" />
             </div>
@@ -363,7 +363,7 @@ export default function Reader() {
         </SheetContent>
       </Sheet>
 
-      <ReaderControls currentChapter={chapter.ordem} totalChapters={chapters.length} onPrevious={() => handleNavigate(currentIndex - 1)} onNext={() => handleNavigate(currentIndex + 1)} onShowChapters={() => setShowChapters(true)} hasPrevious={hasPrevious} hasNext={hasNext} progress={(chapter.ordem / chapters.length) * 100} />
+      <ReaderControls currentChapter={chapter.ordem} totalChapters={chapters.length} onPrevious={() => handleNavigate(currentIndex - 1)} onNext={() => handleNavigate(currentIndex + 1)} onShowChapters={() => setShowChapters(true)} hasPrevious={hasPrevious} hasNext={hasNext} progress={(chapter.ordem / chapters.length) * 100} user={user} />
     </div>
   );
 }

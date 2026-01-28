@@ -52,21 +52,21 @@ export default function BookCard({ book, hasAudio, isAdmin = false }) {
           
           {/* Badge Rascunho (apenas para admin) */}
           {isDraft && isAdmin && (
-            <div className="absolute top-2 left-2 bg-yellow-500 text-white px-3 py-1.5 rounded-md font-semibold text-xs flex items-center gap-2 shadow-lg w-fit z-10">
-              <BookOpen className="w-3 h-3" />
+            <div className="absolute top-2 left-2 bg-yellow-500 text-white px-2 sm:px-3 py-1 sm:py-1.5 rounded-md font-semibold text-[10px] sm:text-xs flex items-center gap-1.5 sm:gap-2 shadow-lg w-fit z-20">
+              <BookOpen className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
               Rascunho
             </div>
           )}
           
           {/* Badge Em Breve com Data */}
           {isComingSoon && (
-            <div className="absolute top-2 left-2 right-2 flex flex-col gap-2">
-              <div className="bg-[#FF0864] text-white px-3 py-1.5 rounded-md font-semibold text-xs flex items-center gap-2 shadow-lg w-fit">
-                <Clock className="w-3 h-3" />
+            <div className="absolute top-2 left-2 right-2 flex flex-col gap-2 z-20">
+              <div className="bg-[#FF0864] text-white px-2 sm:px-3 py-1 sm:py-1.5 rounded-md font-semibold text-[10px] sm:text-xs flex items-center gap-1.5 sm:gap-2 shadow-lg w-fit">
+                <Clock className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                 Em Breve
               </div>
               {book.data_lancamento && (
-                <div className="bg-white/95 backdrop-blur text-gray-900 px-3 py-1.5 rounded-md font-normal text-xs shadow-md w-fit">
+                <div className="bg-white/95 backdrop-blur text-gray-900 px-2 sm:px-3 py-1 sm:py-1.5 rounded-md font-normal text-[10px] sm:text-xs shadow-md w-fit">
                   {(() => {
                     const date = new Date(book.data_lancamento);
                     const day = date.getDate();
@@ -79,16 +79,24 @@ export default function BookCard({ book, hasAudio, isAdmin = false }) {
             </div>
           )}
           
-          {book.age_rating && !isComingSoon && !isDraft && (
-            <div className={`absolute top-2 left-2 ${AGE_RATING_COLORS[book.age_rating] || 'bg-gray-600'} text-white text-xs font-medium px-2 py-0.5 rounded-md shadow-sm`}>
-              {book.age_rating}
+          {/* Tag de Classificação - sempre visível quando não é rascunho ou em breve */}
+          {(book.classificacao || book.age_rating) && !isComingSoon && !isDraft && (
+            <div className={`absolute top-2 left-2 ${AGE_RATING_COLORS[book.classificacao || book.age_rating] || 'bg-gray-600'} text-white text-[10px] sm:text-xs font-medium px-1.5 sm:px-2 py-0.5 rounded-md shadow-sm z-10`}>
+              {book.classificacao || book.age_rating}
+            </div>
+          )}
+          
+          {/* Tag de Classificação quando é rascunho ou em breve - posicionada abaixo */}
+          {(book.classificacao || book.age_rating) && (isComingSoon || (isDraft && isAdmin)) && (
+            <div className={`absolute ${isComingSoon ? 'top-20' : 'top-12'} left-2 ${AGE_RATING_COLORS[book.classificacao || book.age_rating] || 'bg-gray-600'} text-white text-[10px] sm:text-xs font-medium px-1.5 sm:px-2 py-0.5 rounded-md shadow-sm z-10`}>
+              {book.classificacao || book.age_rating}
             </div>
           )}
           
           {hasAudio && !isComingSoon && (
-            <div className="absolute top-2 right-2 bg-[#3065DF] text-white text-xs font-semibold px-2 py-1 rounded-full flex items-center gap-1 shadow-lg">
-              <Headphones className="w-3 h-3" />
-              <span>Áudio</span>
+            <div className="absolute top-2 right-2 bg-[#3065DF] text-white text-[10px] sm:text-xs font-semibold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full flex items-center gap-1 shadow-lg z-10">
+              <Headphones className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+              <span className="hidden xs:inline">Áudio</span>
             </div>
           )}
         </div>

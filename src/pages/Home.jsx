@@ -188,7 +188,9 @@ export default function Home() {
         status: b.status || 'published',
         data_lancamento: b.data_lancamento,
         total_chapters: chaptersCountByBook[b.id] || 0,
-        secao_home: b.secao_home || null
+        secao_home: b.secao_home || null,
+        classificacao: b.classificacao || null,
+        age_rating: b.classificacao || b.age_rating || null
     }));
   }, [books, chaptersCountByBook]);
 
