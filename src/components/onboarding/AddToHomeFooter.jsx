@@ -113,7 +113,7 @@ export default function AddToHomeFooter() {
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: 100, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-white rounded-t-3xl md:rounded-3xl w-full max-w-md max-h-[85vh] overflow-y-auto"
+              className="bg-white rounded-t-3xl md:rounded-3xl w-full max-w-md max-h-[90vh] overflow-y-auto mx-0"
             >
               {/* Header */}
               <div className="sticky top-0 bg-white rounded-t-3xl p-6 border-b">

@@ -204,7 +204,7 @@ export default function Reader() {
             </button>
             <button type="button" onClick={() => setShowChapters(true)} title="Sumário" className="h-9 sm:h-10 rounded-full flex items-center justify-center gap-1.5 sm:gap-2 px-2 sm:px-3 md:px-4 border bg-transparent transition-all duration-150 hover:bg-[#3065DF]/10 active:scale-[0.98] active:bg-[#3065DF]/15 cursor-pointer pointer-events-auto select-auto touch-manipulation" style={{ color: currentTheme.text, borderColor: 'transparent' }}>
               <List className="w-3.5 h-3.5 sm:w-4 sm:h-4 pointer-events-none flex-shrink-0" />
-              <span className="text-[10px] sm:text-xs md:text-sm font-semibold pointer-events-none whitespace-nowrap">todos os capítulos</span>
+              <span className="text-[10px] sm:text-xs md:text-sm font-semibold pointer-events-none whitespace-nowrap">Capítulos</span>
             </button>
           </div>
           <div className="flex items-center gap-1.5 sm:gap-2">
@@ -270,8 +270,8 @@ export default function Reader() {
 
       {/* Modal capítulo bloqueado */}
       <Dialog open={!canRead && showLockedModal} onOpenChange={setShowLockedModal}>
-        <DialogContent className="max-w-sm mx-4 rounded-2xl sm:rounded-[32px] gap-0 p-0 overflow-hidden border-none shadow-2xl">
-          <div className="p-6 sm:p-8 pt-8 sm:pt-10 text-center space-y-5 sm:space-y-6">
+        <DialogContent className="max-w-sm rounded-2xl sm:rounded-[32px] gap-0 p-0 overflow-hidden border-none shadow-2xl">
+          <div className="p-4 sm:p-6 md:p-8 pt-6 sm:pt-8 md:pt-10 text-center space-y-4 sm:space-y-5 md:space-y-6">
             <div className="w-16 h-16 sm:w-20 sm:h-20 bg-amber-50 rounded-full flex items-center justify-center mx-auto">
               <Lock className="w-8 h-8 sm:w-10 sm:h-10 text-amber-500" />
             </div>
@@ -292,8 +292,8 @@ export default function Reader() {
 
       {/* Modal de Login */}
       <Dialog open={showLoginModal} onOpenChange={setShowLoginModal}>
-        <DialogContent className="max-w-sm mx-4 rounded-2xl sm:rounded-[32px] gap-0 p-0 overflow-hidden border-none shadow-2xl">
-          <div className="p-6 sm:p-8 pt-8 sm:pt-10 text-center space-y-5 sm:space-y-6">
+        <DialogContent className="max-w-sm rounded-2xl sm:rounded-[32px] gap-0 p-0 overflow-hidden border-none shadow-2xl">
+          <div className="p-4 sm:p-6 md:p-8 pt-6 sm:pt-8 md:pt-10 text-center space-y-4 sm:space-y-5 md:space-y-6">
             <div className="w-16 h-16 sm:w-20 sm:h-20 bg-blue-50 rounded-full flex items-center justify-center mx-auto">
               <Bookmark className="w-8 h-8 sm:w-10 sm:h-10 text-[#3065DF]" />
             </div>

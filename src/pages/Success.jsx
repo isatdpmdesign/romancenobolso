@@ -76,12 +76,12 @@ export default function Success() {
             </p>
 
             <div className="text-left bg-[#E2FFDE] p-4 sm:p-5 md:p-6 rounded-xl sm:rounded-2xl mb-6 sm:mb-8 border border-[#30A920]">
-              <p className="text-sm sm:text-base text-[#198D02] font-bold mb-3">
+              <p className="text-base sm:text-lg text-[#198D02] font-bold mb-3 sm:mb-4">
                 ➡️ Próximos passos:
               </p>
-              <p className="text-xs sm:text-sm text-gray-700 mb-2 sm:mb-2.5 leading-relaxed">1. Acesse seu e-mail de compra.</p>
-              <p className="text-xs sm:text-sm text-gray-700 mb-2 sm:mb-2.5 leading-relaxed">2. Procure por: <b>"Seu livro chegou! 📖"</b></p>
-              <p className="text-xs sm:text-sm text-gray-700 leading-relaxed">3. Lá você encontrará seu <b>login, senha</b> e o <b>link exclusivo</b> para desbloquear todos os capítulos.</p>
+              <p className="text-sm sm:text-base text-gray-700 mb-2.5 sm:mb-3 leading-relaxed">1. Acesse seu e-mail de compra.</p>
+              <p className="text-sm sm:text-base text-gray-700 mb-2.5 sm:mb-3 leading-relaxed">2. Procure por: <b>"Seu livro chegou! 📖"</b></p>
+              <p className="text-sm sm:text-base text-gray-700 leading-relaxed">3. Lá você encontrará seu <b>login, senha</b> e o <b>link exclusivo</b> para desbloquear todos os capítulos.</p>
             </div>
             
             <button 
