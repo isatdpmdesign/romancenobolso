@@ -87,7 +87,7 @@ export default function LockedChapterModal({ isOpen, onClose, bookTitle, bookPri
                   style={{ textDecoration: 'none' }}
                 >
                   <Button
-                    className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white py-6 text-base font-semibold shadow-lg transition-transform hover:scale-[1.02] cursor-pointer"
+                    className="w-full bg-[#3065DF] hover:bg-[#1E4BB8] text-white py-6 text-base font-semibold shadow-lg transition-transform hover:scale-[1.02] cursor-pointer"
                   >
                     <ShoppingBag className="w-5 h-5 mr-2" />
                     Comprar Livro Completo

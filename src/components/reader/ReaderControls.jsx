@@ -47,7 +47,7 @@ export default function ReaderControls({
             />
             <button
               onClick={onShowChapters}
-              className="flex items-center gap-1.5 text-xs font-medium text-gray-600 dark:text-gray-400 active:text-purple-600 min-w-fit"
+              className="flex items-center gap-1.5 text-xs font-medium text-gray-600 dark:text-gray-400 active:text-[#3065DF] min-w-fit"
             >
               <span>{currentChapter}/{totalChapters}</span>
               <List className="w-4 h-4" />
@@ -59,7 +59,7 @@ export default function ReaderControls({
             <button
               disabled={!hasPrevious}
               onClick={onPrevious}
-              className="flex-1 flex items-center justify-center gap-1 py-3 rounded-xl bg-gray-100 dark:bg-gray-800 active:bg-purple-100 dark:active:bg-purple-900/30 disabled:opacity-40 disabled:active:bg-gray-100 transition-colors"
+              className="flex-1 flex items-center justify-center gap-1 py-3 rounded-xl bg-gray-100 dark:bg-gray-800 active:bg-[#E8EEFB] dark:active:bg-[#3065DF]/20 disabled:opacity-40 disabled:active:bg-gray-100 transition-colors"
             >
               <ChevronLeft className="w-5 h-5 text-gray-700 dark:text-gray-300" />
               <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Anterior</span>
@@ -68,7 +68,7 @@ export default function ReaderControls({
             <button
               disabled={!hasNext}
               onClick={onNext}
-              className="flex-1 flex items-center justify-center gap-1 py-3 rounded-xl bg-purple-600 active:bg-purple-700 disabled:opacity-40 disabled:bg-gray-300 dark:disabled:bg-gray-700 transition-colors"
+              className="flex-1 flex items-center justify-center gap-1 py-3 rounded-xl bg-[#3065DF] active:bg-[#1E4BB8] disabled:opacity-40 disabled:bg-gray-300 dark:disabled:bg-gray-700 transition-colors"
             >
               <span className="text-sm font-medium text-white">Próximo</span>
               <ChevronRight className="w-5 h-5 text-white" />

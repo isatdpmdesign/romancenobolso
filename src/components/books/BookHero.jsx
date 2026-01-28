@@ -5,11 +5,17 @@ import { BookOpen, Star } from "lucide-react";
 
 const AGE_RATING_COLORS = {
   'Livre': 'bg-green-500',
+  '+10': 'bg-blue-500',
+  '+12': 'bg-yellow-500',
+  '+14': 'bg-orange-500',
+  '+16': 'bg-red-500',
+  '+18': 'bg-gray-900',
+  // Compatibilidade com valores antigos
   '10+': 'bg-blue-500',
   '12+': 'bg-yellow-500',
   '14+': 'bg-orange-500',
   '16+': 'bg-red-500',
-  '18+': 'bg-black'
+  '18+': 'bg-gray-900'
 };
 
 export default function BookHero({ book, onStartReading, onSynopsisClick }) {
@@ -42,13 +48,13 @@ export default function BookHero({ book, onStartReading, onSynopsisClick }) {
                 {book.category}
               </span>
               {book.age_rating && (
-                <span className={`${AGE_RATING_COLORS[book.age_rating]} text-white text-sm font-semibold px-2.5 py-0.5 rounded-md`}>
+                <span className={`${AGE_RATING_COLORS[book.age_rating] || 'bg-gray-600'} text-white text-sm font-medium px-2.5 py-0.5 rounded-md shadow-sm`}>
                   {book.age_rating}
                 </span>
               )}
             </div>
             
-            <h1 className="text-4xl md:text-6xl font-bold leading-tight drop-shadow-lg">
+            <h1 className="text-4xl md:text-6xl font-semibold leading-tight drop-shadow-lg">
               {book.title}
             </h1>
             

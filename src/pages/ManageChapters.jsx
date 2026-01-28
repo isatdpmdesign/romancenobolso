@@ -178,35 +178,43 @@ export default function ManageChapters() {
         {/* MODO LISTA (IGUAL AO VÍDEO) */}
         {view === 'list' && (
           <div className="space-y-4">
-            <div className="flex justify-end">
-                <Button onClick={openNewChapter} className="bg-purple-600 hover:bg-purple-700">
-                    <Plus className="w-4 h-4 mr-2"/> Novo Capítulo
-                </Button>
-            </div>
-            
             {chapters.length === 0 ? (
+              <>
                 <Card className="p-10 text-center text-gray-500">Nenhum capítulo criado.</Card>
+                <div className="flex justify-center">
+                  <Button onClick={openNewChapter} className="bg-[#3065DF] hover:bg-[#1E4BB8]">
+                    <Plus className="w-4 h-4 mr-2"/> Novo Capítulo
+                  </Button>
+                </div>
+              </>
             ) : (
-                chapters.map((chapter) => (
-                    <Card key={chapter.id} className="p-4 flex items-center justify-between hover:shadow-md transition-shadow">
-                        <div className="flex items-center gap-4">
-                            <span className="bg-purple-100 text-purple-700 font-bold px-3 py-1 rounded-md">Cap. {chapter.ordem}</span>
-                            <div>
-                                <h3 className="font-semibold text-gray-900">{chapter.titulo}</h3>
-                                {chapter.is_gratuito && <span className="text-xs text-green-600 bg-green-50 px-2 py-0.5 rounded-full">Gratuito</span>}
-                            </div>
-                        </div>
-                        <div className="flex gap-2">
-                            <Button variant="outline" size="icon" onClick={() => openEditChapter(chapter)}>
-                                <span className="sr-only">Editar</span>
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
-                            </Button>
-                            <Button variant="ghost" size="icon" className="text-red-500 hover:bg-red-50" onClick={() => handleDelete(chapter.id)}>
-                                <Trash2 className="w-4 h-4" />
-                            </Button>
-                        </div>
-                    </Card>
-                ))
+              <>
+                {chapters.map((chapter) => (
+                  <Card key={chapter.id} className="p-4 flex items-center justify-between hover:shadow-md transition-shadow">
+                    <div className="flex items-center gap-4">
+                      <span className="bg-purple-100 text-purple-700 font-bold px-3 py-1 rounded-md">Cap. {chapter.ordem}</span>
+                      <div>
+                        <h3 className="font-semibold text-gray-900">{chapter.titulo}</h3>
+                        {chapter.is_gratuito && <span className="text-xs text-green-600 bg-green-50 px-2 py-0.5 rounded-full">Gratuito</span>}
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="icon" onClick={() => openEditChapter(chapter)}>
+                        <span className="sr-only">Editar</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
+                      </Button>
+                      <Button variant="ghost" size="icon" className="text-red-500 hover:bg-red-50" onClick={() => handleDelete(chapter.id)}>
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </Card>
+                ))}
+                <div className="flex justify-center pt-2">
+                  <Button onClick={openNewChapter} className="bg-[#3065DF] hover:bg-[#1E4BB8]">
+                    <Plus className="w-4 h-4 mr-2"/> Novo Capítulo
+                  </Button>
+                </div>
+              </>
             )}
           </div>
         )}
@@ -235,7 +243,7 @@ export default function ManageChapters() {
                {/* Toggle Gratuito */}
                <div className="flex items-center space-x-2 bg-gray-50 p-3 rounded-lg border">
                    <Switch id="free" checked={formData.is_gratuito} onCheckedChange={c => setFormData({...formData, is_gratuito: c})} />
-                   <Label htmlFor="free" className="cursor-pointer">Capítulo Gratuito (Liberado para não-assinantes)</Label>
+                   <Label htmlFor="free" className="cursor-pointer">Capítulo Gratuito (Liberado para todos)</Label>
                </div>
 
                {/* Uploads (Capa e Áudio) */}
@@ -302,7 +310,7 @@ export default function ManageChapters() {
                {/* Botões Finais */}
                <div className="flex justify-end gap-3 pt-4 border-t">
                    <Button variant="outline" onClick={() => setView('list')}>Cancelar</Button>
-                   <Button onClick={handleSave} disabled={isSaving || isUploadingAudio || isUploadingImage} className="bg-purple-600 hover:bg-purple-700 min-w-[150px]">
+                   <Button onClick={handleSave} disabled={isSaving || isUploadingAudio || isUploadingImage} className="bg-[#3065DF] hover:bg-[#1E4BB8] min-w-[150px]">
                        {isSaving ? <Loader2 className="animate-spin w-4 h-4 mr-2"/> : <Save className="w-4 h-4 mr-2"/>}
                        {selectedChapter ? 'Atualizar Capítulo' : 'Criar Capítulo'}
                    </Button>

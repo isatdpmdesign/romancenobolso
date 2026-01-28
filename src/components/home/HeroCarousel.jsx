@@ -21,11 +21,17 @@ const useIsMobile = () => {
 
 const ageRatingColors = {
   'Livre': 'bg-green-500',
-  '10+': 'bg-green-600',
+  '+10': 'bg-blue-500',
+  '+12': 'bg-yellow-500',
+  '+14': 'bg-orange-500',
+  '+16': 'bg-red-500',
+  '+18': 'bg-gray-900',
+  // Compatibilidade com valores antigos
+  '10+': 'bg-blue-500',
   '12+': 'bg-yellow-500',
   '14+': 'bg-orange-500',
   '16+': 'bg-red-500',
-  '18+': 'bg-red-700'
+  '18+': 'bg-gray-900'
 };
 
 export default function HeroCarousel({ books, booksWithAudio, featuredData = [], firstChapters = {}, user }) {
@@ -178,7 +184,7 @@ export default function HeroCarousel({ books, booksWithAudio, featuredData = [],
             </div>
 
             {/* Title */}
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-white leading-tight">
+            <h1 className="text-4xl md:text-6xl lg:text-7xl font-semibold text-white leading-tight">
               {currentBook.title}
             </h1>
 

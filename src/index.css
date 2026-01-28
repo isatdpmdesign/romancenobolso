@@ -156,3 +156,55 @@ button:focus-visible {
     @apply bg-background text-foreground;
   }
 }
+
+/* Melhorias de Responsividade Mobile */
+@layer utilities {
+  /* Touch optimization */
+  .touch-manipulation {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  /* Safe area para iOS */
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  
+  /* Breakpoint customizado para telas muito pequenas */
+  @media (max-width: 475px) {
+    .xs\:inline {
+      display: inline;
+    }
+    .xs\:block {
+      display: block;
+    }
+    .xs\:hidden {
+      display: none;
+    }
+  }
+  
+  /* Prevenir zoom em inputs no iOS */
+  @media screen and (max-width: 768px) {
+    input,
+    select,
+    textarea {
+      font-size: 16px !important;
+    }
+  }
+  
+  /* Melhorar scroll em mobile */
+  * {
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Otimizar animações em mobile */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}

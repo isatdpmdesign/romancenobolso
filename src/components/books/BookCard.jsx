@@ -6,20 +6,27 @@ import { createPageUrl } from "@/utils";
 
 const AGE_RATING_COLORS = {
   'Livre': 'bg-green-500',
+  '+10': 'bg-blue-500',
+  '+12': 'bg-yellow-500',
+  '+14': 'bg-orange-500',
+  '+16': 'bg-red-500',
+  '+18': 'bg-gray-900',
+  // Compatibilidade com valores antigos
   '10+': 'bg-blue-500',
   '12+': 'bg-yellow-500',
   '14+': 'bg-orange-500',
   '16+': 'bg-red-500',
-  '18+': 'bg-black'
+  '18+': 'bg-gray-900'
 };
 
-export default function BookCard({ book, hasAudio }) {
-  const isComingSoon = book.status === 'coming_soon';
+export default function BookCard({ book, hasAudio, isAdmin = false }) {
+  const isComingSoon = book.status === 'coming_soon' || book.status === 'Em Breve';
+  const isDraft = book.status === 'draft' || book.status === 'Rascunho' || book.status === 'rascunho';
   
   return (
     <Link to={isComingSoon ? '#' : createPageUrl('BookDetails') + `?id=${book.id}`} onClick={(e) => isComingSoon && e.preventDefault()}>
       {/* Removi o h-full daqui para o cartão poder crescer se precisar */}
-      <Card className={`group flex flex-col overflow-hidden bg-white dark:bg-gray-800 hover:shadow-2xl transition-all duration-300 cursor-pointer transform hover:-translate-y-2 border-0 shadow-md ${isComingSoon ? 'opacity-90' : ''}`}>
+      <Card className={`group flex flex-col overflow-hidden bg-white dark:bg-gray-800 hover:shadow-2xl transition-all duration-300 cursor-pointer transform hover:-translate-y-2 border-0 shadow-md ${isComingSoon ? 'opacity-90' : ''} ${isDraft ? 'border-2 border-yellow-400' : ''}`}>
         
         {/* SOLUÇÃO DEFINITIVA:
             - aspect-[2/3]: Tenta manter o formato de livro.
@@ -31,7 +38,7 @@ export default function BookCard({ book, hasAudio }) {
               src={book.cover_image}
               alt={book.title}
               /* O object-cover aqui garante que a imagem preencha o espaço da trava sem distorcer */
-              className={`absolute inset-0 w-full h-full object-cover object-top group-hover:scale-110 transition-transform duration-500 ${isComingSoon ? 'grayscale-[30%]' : ''}`}
+              className={`absolute inset-0 w-full h-full object-cover object-top group-hover:scale-110 transition-transform duration-500 ${isComingSoon ? 'grayscale-[30%]' : ''} ${isDraft ? 'opacity-70' : ''}`}
               loading="lazy"
               decoding="async"
             />
@@ -43,24 +50,43 @@ export default function BookCard({ book, hasAudio }) {
           
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
           
-          {/* Badge Em Breve */}
-          {isComingSoon && (
-            <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-              <div className="bg-[#FF0864] text-white px-4 py-2 rounded-full font-bold text-sm flex items-center gap-2 shadow-lg">
-                <Clock className="w-4 h-4" />
-                Em Breve
-              </div>
+          {/* Badge Rascunho (apenas para admin) */}
+          {isDraft && isAdmin && (
+            <div className="absolute top-2 left-2 bg-yellow-500 text-white px-3 py-1.5 rounded-md font-semibold text-xs flex items-center gap-2 shadow-lg w-fit z-10">
+              <BookOpen className="w-3 h-3" />
+              Rascunho
             </div>
           )}
           
-          {book.age_rating && !isComingSoon && (
-            <div className={`absolute top-2 left-2 ${AGE_RATING_COLORS[book.age_rating]} text-white text-xs font-bold px-2 py-1 rounded`}>
+          {/* Badge Em Breve com Data */}
+          {isComingSoon && (
+            <div className="absolute top-2 left-2 right-2 flex flex-col gap-2">
+              <div className="bg-[#FF0864] text-white px-3 py-1.5 rounded-md font-semibold text-xs flex items-center gap-2 shadow-lg w-fit">
+                <Clock className="w-3 h-3" />
+                Em Breve
+              </div>
+              {book.data_lancamento && (
+                <div className="bg-white/95 backdrop-blur text-gray-900 px-3 py-1.5 rounded-md font-normal text-xs shadow-md w-fit">
+                  {(() => {
+                    const date = new Date(book.data_lancamento);
+                    const day = date.getDate();
+                    const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+                    const month = monthNames[date.getMonth()];
+                    return `${day} de ${month}`;
+                  })()}
+                </div>
+              )}
+            </div>
+          )}
+          
+          {book.age_rating && !isComingSoon && !isDraft && (
+            <div className={`absolute top-2 left-2 ${AGE_RATING_COLORS[book.age_rating] || 'bg-gray-600'} text-white text-xs font-medium px-2 py-0.5 rounded-md shadow-sm`}>
               {book.age_rating}
             </div>
           )}
           
           {hasAudio && !isComingSoon && (
-            <div className="absolute top-2 right-2 bg-[#3065DF] text-white text-xs font-bold px-2 py-1 rounded-full flex items-center gap-1 shadow-lg">
+            <div className="absolute top-2 right-2 bg-[#3065DF] text-white text-xs font-semibold px-2 py-1 rounded-full flex items-center gap-1 shadow-lg">
               <Headphones className="w-3 h-3" />
               <span>Áudio</span>
             </div>
@@ -73,15 +99,15 @@ export default function BookCard({ book, hasAudio }) {
           </h3>
           <p className="text-sm text-gray-600 dark:text-gray-400">{book.author}</p>
           <div className="flex items-center justify-between pt-2">
-            <span className="text-xs text-gray-500 dark:text-gray-500">
-              {isComingSoon && book.publish_date 
-                ? `Lançamento: ${new Date(book.publish_date).toLocaleDateString('pt-BR')}`
-                : `${book.total_chapters || 0} capítulos`
+            <span className="text-xs text-gray-500 dark:text-gray-500 font-normal">
+              {book.total_chapters !== undefined 
+                ? `${book.total_chapters} ${book.total_chapters === 1 ? 'capítulo' : 'capítulos'}`
+                : '0 capítulos'
               }
             </span>
             {!isComingSoon && (
-              <span className="text-sm font-medium text-[#3065DF]">
-                Ler grátis →
+              <span className="text-sm font-semibold text-[#FF0864]">
+                LER AGORA
               </span>
             )}
           </div>

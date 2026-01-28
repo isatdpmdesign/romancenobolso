@@ -35,7 +35,7 @@ export default function ChapterList({ chapters, hasPurchased, onChapterClick, cu
                                     <div className={`flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center font-semibold text-sm ${
                                       isRead 
                                         ? 'bg-teal-100 dark:bg-teal-900/30 text-teal-600' 
-                                        : 'bg-purple-100 dark:bg-purple-900/30 text-purple-600'
+                                        : 'bg-[#E8EEFB] dark:bg-[#3065DF]/20 text-[#3065DF]'
                                     }`}>
                                       {chapter.chapter_number}
                                     </div>
@@ -52,14 +52,14 @@ export default function ChapterList({ chapters, hasPurchased, onChapterClick, cu
                   {isRead && (
                     <CheckCircle2 className="w-5 h-5 text-teal-500" />
                   )}
-                  <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-purple-600 group-hover:translate-x-1 transition-all" />
+                  <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-[#3065DF] group-hover:translate-x-1 transition-all" />
                 </div>
               </div>
               
               {!isLocked && (
                 <div className="h-1 bg-gray-100 dark:bg-gray-700 w-full">
                   <motion.div 
-                    className="h-full bg-gradient-to-r from-purple-600 to-teal-500"
+                    className="h-full bg-gradient-to-r from-[#3065DF] to-teal-500"
                     initial={{ width: 0 }}
                     whileHover={{ width: '100%' }}
                     transition={{ duration: 0.3 }}

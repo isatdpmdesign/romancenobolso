@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { trackEvent } from '../utils/analytics';
 
-export default function ShareButton({ bookId, bookTitle, chapterId = null, chapterTitle = null }) {
+export default function ShareButton({ bookId, bookTitle, chapterId = null, chapterTitle = null, className, style }) {
   const [copied, setCopied] = useState(false);
 
   const getShareUrl = () => {
@@ -83,7 +83,7 @@ export default function ShareButton({ bookId, bookTitle, chapterId = null, chapt
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="icon" className="h-9 w-9">
+        <Button variant="ghost" size="icon" className={className ?? "h-9 w-9"} style={style} title="Compartilhar">
           <Share2 className="w-4 h-4" />
         </Button>
       </DropdownMenuTrigger>

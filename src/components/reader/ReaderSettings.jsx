@@ -23,18 +23,22 @@ const FONTS = [
   { id: 'mono', name: 'Mono', family: 'ui-monospace, monospace' },
 ];
 
-export default function ReaderSettings({ settings, onSettingsChange }) {
+export default function ReaderSettings({ settings, onSettingsChange, triggerClassName, triggerStyle }) {
   const [open, setOpen] = React.useState(false);
 
   const updateSetting = (key, value) => {
     onSettingsChange({ ...settings, [key]: value });
   };
 
+  const triggerClass = triggerClassName ?? "flex items-center gap-2 h-10 px-4 rounded-full transition-colors hover:opacity-90";
+  const triggerStyleMerged = triggerStyle ?? {};
+
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
         <button
-          className="flex items-center gap-1.5 h-9 px-3 rounded-full border border-gray-300 dark:border-gray-600 active:bg-gray-100 dark:active:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
+          className={triggerClass}
+          style={Object.keys(triggerStyleMerged).length ? triggerStyleMerged : undefined}
           title="Ajustar texto"
         >
           <span className="text-sm font-medium">Aa</span>
@@ -113,7 +117,7 @@ export default function ReaderSettings({ settings, onSettingsChange }) {
                     >
                       <Icon className="w-6 h-6" style={{ color: theme.text }} />
                     </div>
-                    <span className={`text-xs ${isActive ? 'font-semibold text-purple-600' : 'text-gray-500'}`}>
+                    <span className={`text-xs ${isActive ? 'font-semibold text-[#3065DF]' : 'text-gray-500'}`}>
                       {theme.name}
                     </span>
                   </button>
@@ -136,7 +140,7 @@ export default function ReaderSettings({ settings, onSettingsChange }) {
                     onClick={() => updateSetting('fontFamily', font.id)}
                     className={`flex-1 py-3 rounded-xl transition-all ${
                       isActive 
-                        ? 'bg-purple-600 text-white' 
+                        ? 'bg-[#3065DF] text-white' 
                         : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 active:bg-gray-200'
                     }`}
                   >
@@ -191,7 +195,7 @@ export default function ReaderSettings({ settings, onSettingsChange }) {
                     onClick={() => updateSetting('margin', margin.id)}
                     className={`flex-1 py-3 rounded-xl flex flex-col items-center gap-1 transition-all ${
                       isActive 
-                        ? 'bg-purple-600 text-white' 
+                        ? 'bg-[#3065DF] text-white' 
                         : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 active:bg-gray-200'
                     }`}
                   >

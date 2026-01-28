@@ -86,7 +86,7 @@ export default function ChapterReviewForm({ chapterId, bookId, user, onSuccess }
       <Button
         onClick={handleSubmit}
         disabled={createReviewMutation.isPending || rating === 0}
-        className="w-full bg-purple-600 hover:bg-purple-700"
+        className="w-full bg-[#3065DF] hover:bg-[#1E4BB8]"
       >
         {createReviewMutation.isPending ? (
           <Loader2 className="w-4 h-4 mr-2 animate-spin" />

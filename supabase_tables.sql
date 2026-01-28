@@ -134,6 +134,57 @@ CREATE POLICY "Users can update their own interests"
     ON book_interest FOR UPDATE
     USING (auth.jwt() ->> 'email' = user_email);
 
+-- 5. Tabela: user_progress (Progresso de Leitura)
+CREATE TABLE IF NOT EXISTS user_progress (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    book_id TEXT NOT NULL,
+    last_chapter_id TEXT NOT NULL,
+    progress_percent INTEGER DEFAULT 0 CHECK (progress_percent >= 0 AND progress_percent <= 100),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE(user_id, book_id) -- Um registro por usuário por livro
+);
+
+-- Índices para performance
+CREATE INDEX IF NOT EXISTS idx_user_progress_user_id ON user_progress(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_progress_book_id ON user_progress(book_id);
+CREATE INDEX IF NOT EXISTS idx_user_progress_updated_at ON user_progress(updated_at DESC);
+
+-- Trigger para atualizar updated_at automaticamente
+CREATE OR REPLACE FUNCTION update_user_progress_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_update_user_progress_updated_at
+    BEFORE UPDATE ON user_progress
+    FOR EACH ROW
+    EXECUTE FUNCTION update_user_progress_updated_at();
+
+-- RLS (Row Level Security) para user_progress
+ALTER TABLE user_progress ENABLE ROW LEVEL SECURITY;
+
+-- Policies para user_progress
+CREATE POLICY "Users can view their own progress"
+    ON user_progress FOR SELECT
+    USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert their own progress"
+    ON user_progress FOR INSERT
+    WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update their own progress"
+    ON user_progress FOR UPDATE
+    USING (auth.uid() = user_id)
+    WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete their own progress"
+    ON user_progress FOR DELETE
+    USING (auth.uid() = user_id);
+
 -- ============================================
 -- Comentários sobre buckets de storage
 -- ============================================

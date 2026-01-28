@@ -16,12 +16,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { 
   ArrowLeft, 
   Plus, 
@@ -32,19 +26,14 @@ import {
   MessageSquare,
   Check,
   X,
-  Send,
   Loader2
 } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 
 const FAQ_CATEGORIES = ['geral', 'pagamento', 'conta', 'leitura', 'tecnico'];
-const TICKET_STATUSES = {
-  aberto: { label: 'Aberto', color: 'bg-yellow-100 text-yellow-700' },
-  em_andamento: { label: 'Em Andamento', color: 'bg-blue-100 text-blue-700' },
-  respondido: { label: 'Respondido', color: 'bg-green-100 text-green-700' },
-  fechado: { label: 'Fechado', color: 'bg-gray-100 text-gray-700' }
-};
 
 export default function AdminSupport() {
   const navigate = useNavigate();
@@ -56,10 +45,6 @@ export default function AdminSupport() {
   const [showFaqForm, setShowFaqForm] = useState(false);
   const [editingFaq, setEditingFaq] = useState(null);
   const [faqForm, setFaqForm] = useState({ question: '', answer: '', category: 'geral', order: 0, is_active: true });
-  
-  // Ticket state
-  const [selectedTicket, setSelectedTicket] = useState(null);
-  const [responseText, setResponseText] = useState('');
 
   useEffect(() => {
     supabase.auth.getUser()
@@ -87,19 +72,6 @@ export default function AdminSupport() {
         .from('faq')
         .select('*')
         .order('order');
-      if (error) throw error;
-      return data || [];
-    }
-  });
-
-  // Tickets
-  const { data: tickets = [] } = useQuery({
-    queryKey: ['adminTickets'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('support_ticket')
-        .select('*')
-        .order('created_date', { ascending: false });
       if (error) throw error;
       return data || [];
     }
@@ -170,41 +142,18 @@ export default function AdminSupport() {
     }
   });
 
-  // Ticket Mutations
-  const respondTicketMutation = useMutation({
-    mutationFn: async ({ id, response, userEmail }) => {
-      // Atualizar ticket
-      const { error: ticketError } = await supabase
-        .from('support_ticket')
-        .update({
-          admin_response: response,
-          status: 'respondido',
-          responded_at: new Date().toISOString()
-        })
+  // Toggle FAQ active status
+  const toggleFaqActiveMutation = useMutation({
+    mutationFn: async ({ id, is_active }) => {
+      const { error } = await supabase
+        .from('faq')
+        .update({ is_active })
         .eq('id', id);
-      if (ticketError) throw ticketError;
-
-      // Enviar notificação
-      const { error: notifError } = await supabase
-        .from('notification')
-        .insert({
-          user_email: userEmail,
-          type: 'support_response',
-          title: 'Resposta do Suporte',
-          message: 'Sua solicitação foi respondida pela nossa equipe.',
-          link: createPageUrl('Support')
-        });
-      if (notifError) throw notifError;
-
-      // Nota: Envio de email precisa ser implementado via edge function ou serviço externo
-      // Por enquanto, apenas logamos
-      console.log('Email deveria ser enviado para:', userEmail);
+      if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['adminTickets']);
-      setSelectedTicket(null);
-      setResponseText('');
-      toast.success('Resposta enviada e usuário notificado!');
+      queryClient.invalidateQueries(['adminFaqs']);
+      toast.success('Status da FAQ atualizado!');
     }
   });
 
@@ -285,67 +234,29 @@ export default function AdminSupport() {
             <ArrowLeft className="w-4 h-4 mr-2" />
             Voltar ao Admin
           </Button>
-          <h1 className="text-xl font-bold text-purple-900 dark:text-white">Suporte & Moderação</h1>
+          <h1 className="text-xl font-bold text-purple-900 dark:text-white">Gerenciar FAQs & Moderação</h1>
           <div className="w-24" />
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-6 py-8">
-        <Tabs defaultValue="tickets" className="space-y-8">
+        <Tabs defaultValue="faqs" className="space-y-8">
           <TabsList className="bg-white dark:bg-gray-800 shadow-md p-1">
-            <TabsTrigger value="tickets" className="data-[state=active]:bg-purple-600 data-[state=active]:text-white">
-              <MessageSquare className="w-4 h-4 mr-2" />
-              Tickets ({tickets.filter(t => t.status === 'aberto').length})
-            </TabsTrigger>
-            <TabsTrigger value="faqs" className="data-[state=active]:bg-purple-600 data-[state=active]:text-white">
+            <TabsTrigger value="faqs" className="data-[state=active]:bg-[#3065DF] data-[state=active]:text-white">
               <HelpCircle className="w-4 h-4 mr-2" />
-              FAQs
+              FAQs ({faqs.length})
             </TabsTrigger>
-            <TabsTrigger value="moderation" className="data-[state=active]:bg-purple-600 data-[state=active]:text-white">
+            <TabsTrigger value="moderation" className="data-[state=active]:bg-[#3065DF] data-[state=active]:text-white">
               <MessageSquare className="w-4 h-4 mr-2" />
               Moderação ({pendingComments.length})
             </TabsTrigger>
           </TabsList>
 
-          {/* TICKETS */}
-          <TabsContent value="tickets" className="space-y-4">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Tickets de Suporte</h2>
-            
-            {tickets.length === 0 ? (
-              <Card className="p-12 text-center bg-white dark:bg-gray-800">
-                <MessageSquare className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-500 dark:text-gray-400">Nenhum ticket de suporte</p>
-              </Card>
-            ) : (
-              <div className="space-y-3">
-                {tickets.map((ticket) => (
-                  <Card key={ticket.id} className="p-4 hover:shadow-lg transition-all cursor-pointer bg-white dark:bg-gray-800" onClick={() => setSelectedTicket(ticket)}>
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <Badge className={TICKET_STATUSES[ticket.status]?.color}>
-                            {TICKET_STATUSES[ticket.status]?.label}
-                          </Badge>
-                          <span className="text-xs text-gray-400">
-                            {new Date(ticket.created_date).toLocaleDateString('pt-BR')}
-                          </span>
-                        </div>
-                        <h3 className="font-semibold text-gray-900 dark:text-white">{ticket.subject}</h3>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">{ticket.user_email}</p>
-                        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 line-clamp-2">{ticket.message}</p>
-                      </div>
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </TabsContent>
-
           {/* FAQs */}
           <TabsContent value="faqs" className="space-y-6">
             <div className="flex justify-between items-center">
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Perguntas Frequentes</h2>
-              <Button onClick={() => setShowFaqForm(true)} className="bg-purple-600 hover:bg-purple-700">
+              <Button onClick={() => setShowFaqForm(true)} className="bg-[#3065DF] hover:bg-[#1E4BB8]">
                 <Plus className="w-4 h-4 mr-2" />
                 Nova FAQ
               </Button>
@@ -382,9 +293,21 @@ export default function AdminSupport() {
                         <label className="text-sm font-medium">Resposta</label>
                         <Textarea value={faqForm.answer} onChange={(e) => setFaqForm({...faqForm, answer: e.target.value})} placeholder="Digite a resposta..." rows={4} />
                       </div>
+                      <div className="flex items-center space-x-2 bg-gray-50 dark:bg-gray-700 p-3 rounded-lg border">
+                        <Switch 
+                          id="active" 
+                          checked={faqForm.is_active} 
+                          onCheckedChange={(checked) => setFaqForm({...faqForm, is_active: checked})} 
+                        />
+                        <Label htmlFor="active" className="cursor-pointer">FAQ Ativa (visível para usuários)</Label>
+                      </div>
                       <div className="flex gap-2">
-                        <Button onClick={handleSaveFaq} disabled={createFaqMutation.isPending || updateFaqMutation.isPending} className="bg-purple-600 hover:bg-purple-700">
-                          <Save className="w-4 h-4 mr-2" />
+                        <Button onClick={handleSaveFaq} disabled={createFaqMutation.isPending || updateFaqMutation.isPending || !faqForm.question.trim() || !faqForm.answer.trim()} className="bg-[#3065DF] hover:bg-[#1E4BB8]">
+                          {createFaqMutation.isPending || updateFaqMutation.isPending ? (
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          ) : (
+                            <Save className="w-4 h-4 mr-2" />
+                          )}
                           Salvar
                         </Button>
                         <Button variant="outline" onClick={resetFaqForm}>Cancelar</Button>
@@ -395,30 +318,59 @@ export default function AdminSupport() {
               )}
             </AnimatePresence>
 
-            <div className="space-y-3">
-              {faqs.map((faq) => (
-                <Card key={faq.id} className="p-4 bg-white dark:bg-gray-800">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <Badge variant="outline">{faq.category}</Badge>
-                        {!faq.is_active && <Badge variant="secondary">Inativo</Badge>}
+            {faqs.length === 0 ? (
+              <Card className="p-12 text-center bg-white dark:bg-gray-800">
+                <HelpCircle className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                <p className="text-gray-500 dark:text-gray-400 mb-4">Nenhuma FAQ criada ainda.</p>
+                <Button onClick={() => setShowFaqForm(true)} className="bg-[#3065DF] hover:bg-[#1E4BB8]">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Criar Primeira FAQ
+                </Button>
+              </Card>
+            ) : (
+              <div className="space-y-3">
+                {faqs.map((faq) => (
+                  <Card key={faq.id} className="p-5 bg-white dark:bg-gray-800 shadow-sm hover:shadow-md transition-shadow">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Badge variant="outline" className="capitalize">{faq.category}</Badge>
+                          <Badge variant={faq.is_active ? "default" : "secondary"} className={faq.is_active ? "bg-green-100 text-green-700" : ""}>
+                            {faq.is_active ? 'Ativa' : 'Inativa'}
+                          </Badge>
+                          <span className="text-xs text-gray-400">Ordem: {faq.order || 0}</span>
+                        </div>
+                        <h3 className="font-semibold text-lg text-gray-900 dark:text-white mb-2">{faq.question}</h3>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">{faq.answer}</p>
                       </div>
-                      <h3 className="font-semibold text-gray-900 dark:text-white">{faq.question}</h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{faq.answer}</p>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <div className="flex flex-col items-center gap-1">
+                          <Label htmlFor={`toggle-${faq.id}`} className="text-xs text-gray-500 cursor-pointer">
+                            {faq.is_active ? 'Ativa' : 'Inativa'}
+                          </Label>
+                          <Switch
+                            id={`toggle-${faq.id}`}
+                            checked={faq.is_active !== false}
+                            onCheckedChange={(checked) => toggleFaqActiveMutation.mutate({ id: faq.id, is_active: checked })}
+                            disabled={toggleFaqActiveMutation.isPending}
+                          />
+                        </div>
+                        <Button variant="ghost" size="icon" onClick={() => handleEditFaq(faq)} className="hover:bg-blue-50">
+                          <Edit className="w-4 h-4 text-blue-600" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="text-red-600 hover:bg-red-50" onClick={() => {
+                          if (window.confirm(`Tem certeza que deseja excluir a FAQ "${faq.question}"?`)) {
+                            deleteFaqMutation.mutate(faq.id);
+                          }
+                        }}>
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </div>
-                    <div className="flex gap-2">
-                      <Button variant="ghost" size="icon" onClick={() => handleEditFaq(faq)}>
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="text-red-600" onClick={() => deleteFaqMutation.mutate(faq.id)}>
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </Card>
-              ))}
-            </div>
+                  </Card>
+                ))}
+              </div>
+            )}
           </TabsContent>
 
           {/* MODERATION */}
@@ -463,62 +415,6 @@ export default function AdminSupport() {
           </TabsContent>
         </Tabs>
       </div>
-
-      {/* Ticket Response Dialog */}
-      <Dialog open={!!selectedTicket} onOpenChange={() => setSelectedTicket(null)}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Responder Ticket</DialogTitle>
-          </DialogHeader>
-          {selectedTicket && (
-            <div className="space-y-4">
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <div className="flex items-center gap-2 mb-2">
-                  <Badge className={TICKET_STATUSES[selectedTicket.status]?.color}>
-                    {TICKET_STATUSES[selectedTicket.status]?.label}
-                  </Badge>
-                  <span className="text-sm text-gray-500">{selectedTicket.category}</span>
-                </div>
-                <h3 className="font-semibold">{selectedTicket.subject}</h3>
-                <p className="text-sm text-gray-500">{selectedTicket.user_email} • {selectedTicket.user_name}</p>
-                <p className="mt-3 text-gray-700">{selectedTicket.message}</p>
-              </div>
-
-              {selectedTicket.admin_response ? (
-                <div className="bg-green-50 p-4 rounded-lg">
-                  <p className="text-sm font-medium text-green-700 mb-1">Resposta enviada:</p>
-                  <p className="text-gray-700">{selectedTicket.admin_response}</p>
-                </div>
-              ) : (
-                <>
-                  <Textarea
-                    placeholder="Digite sua resposta..."
-                    value={responseText}
-                    onChange={(e) => setResponseText(e.target.value)}
-                    rows={4}
-                  />
-                  <Button
-                    onClick={() => respondTicketMutation.mutate({ 
-                      id: selectedTicket.id, 
-                      response: responseText,
-                      userEmail: selectedTicket.user_email
-                    })}
-                    disabled={!responseText.trim() || respondTicketMutation.isPending}
-                    className="w-full bg-purple-600 hover:bg-purple-700"
-                  >
-                    {respondTicketMutation.isPending ? (
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    ) : (
-                      <Send className="w-4 h-4 mr-2" />
-                    )}
-                    Enviar Resposta
-                  </Button>
-                </>
-              )}
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
