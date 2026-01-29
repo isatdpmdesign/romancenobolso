@@ -267,10 +267,10 @@ export default function Layout({ children, currentPageName }) {
               {user ? (
                   <>
                     {/* Adicionada a barra / antes do link para evitar erro 404 */}
-                    <Link to="/MyBooks" className="hidden xs:block">
+                    <Link to="/MyBooks">
                       <Button variant="ghost" className="flex items-center gap-1.5 sm:gap-2 hover:bg-[#FFE5EE] text-[#3065DF] h-8 sm:h-9 text-xs sm:text-sm touch-manipulation">
                         <Library className="w-4 h-4 sm:w-5 sm:h-5" />
-                        <span className="hidden sm:inline">Meus Livros</span>
+                        <span className="hidden sm:inline">Minha Estante</span>
                       </Button>
                     </Link>
                     <NotificationBell userEmail={user.email} />

@@ -95,8 +95,8 @@ export default function BookCard({ book, hasAudio, isAdmin = false }) {
           
           {hasAudio && !isComingSoon && (
             <div className="absolute top-2 right-2 bg-[#3065DF] text-white text-[10px] sm:text-xs font-semibold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full flex items-center gap-1 shadow-lg z-10">
-              <Headphones className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
-              <span className="hidden xs:inline">Áudio</span>
+              <Headphones className="w-2.5 h-2.5 sm:w-3 sm:h-3 flex-shrink-0" />
+              <span className="hidden sm:inline">Áudio</span>
             </div>
           )}
         </div>
@@ -106,14 +106,6 @@ export default function BookCard({ book, hasAudio, isAdmin = false }) {
             {book.title}
           </h3>
           <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">{book.author}</p>
-          <div className="flex items-center justify-between pt-1 sm:pt-2">
-            <span className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-500 font-normal">
-              {book.total_chapters !== undefined 
-                ? `${book.total_chapters} ${book.total_chapters === 1 ? 'cap.' : 'caps.'}`
-                : '0 caps.'
-              }
-            </span>
-          </div>
         </div>
         
         {/* Botão Ler Agora isolado na borda */}

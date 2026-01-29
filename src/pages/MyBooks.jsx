@@ -52,18 +52,10 @@ export default function MyBooks() {
   const books = booksWithProgress;
   const loading = loadingProgress || loadingBooks;
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#FFF8FA]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#FF0864]"></div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-[#FFF8FA] p-3 sm:p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
-        {/* Cabeçalho com tipografia ajustada */}
+        {/* Cabeçalho com tipografia ajustada — sempre visível, mesmo ao carregar */}
         <div className="mb-6 sm:mb-8 md:mb-10 flex items-center gap-2 sm:gap-4">
           <button 
             onClick={() => navigate('/')} 
@@ -74,7 +66,12 @@ export default function MyBooks() {
           <h1 className="text-xl sm:text-2xl md:text-3xl font-semibold text-[#1a1a1a] tracking-tight">Minha Estante</h1>
         </div>
 
-        {books.length === 0 ? (
+        {loading ? (
+          /* Loading: mantém a estrutura; spinner só na área de conteúdo */
+          <div className="flex items-center justify-center py-20 sm:py-28">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#FF0864]"></div>
+          </div>
+        ) : books.length === 0 ? (
           /* Estado Vazio - Tipografia Leve */
           <div className="max-w-2xl mx-auto mt-6 sm:mt-10 text-center py-12 sm:py-16 md:py-20 px-6 sm:px-8 md:px-10 bg-white rounded-2xl sm:rounded-3xl md:rounded-[40px] shadow-sm border border-pink-50">
             <div className="relative inline-block mb-6 sm:mb-8">

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -72,7 +72,7 @@ export default function Reader() {
   });
 
   // Verificar se o capítulo atual está marcado
-  const { data: userProgress } = useQuery({
+  const { data: userProgress, isLoading: loadingUserProgress } = useQuery({
     queryKey: ['userProgress', user?.id, bookId],
     queryFn: async () => {
       if (!user?.id || !bookId) return null;
@@ -88,6 +88,52 @@ export default function Reader() {
   });
 
   const isChapterMarked = userProgress?.last_chapter_id === chapterId && !!user;
+  const hasAutoRegisteredRef = useRef(false);
+
+  useEffect(() => {
+    hasAutoRegisteredRef.current = false;
+  }, [bookId]);
+
+  // Registrar livro em "Minha Estante" assim que o usuário logado começa a ler (sem progresso prévio).
+  // O botão Salvar/marcar capítulo continua com a mesma regra (handleBookmark).
+  useEffect(() => {
+    if (
+      !user?.id ||
+      !bookId ||
+      !chapterId ||
+      !chapter ||
+      !chapters.length ||
+      loadingUserProgress ||
+      userProgress !== null
+    ) {
+      return;
+    }
+    if (hasAutoRegisteredRef.current) return;
+    hasAutoRegisteredRef.current = true;
+
+    const progressPercent = Math.round((chapter.ordem / chapters.length) * 100);
+    supabase
+      .from('user_progress')
+      .upsert(
+        {
+          user_id: user.id,
+          book_id: bookId,
+          last_chapter_id: chapterId,
+          progress_percent: progressPercent,
+        },
+        { onConflict: 'user_id,book_id' }
+      )
+      .select()
+      .then(({ error }) => {
+        if (error) {
+          console.warn('[Reader] Erro ao auto-registrar em Minha Estante:', error);
+          hasAutoRegisteredRef.current = false;
+          return;
+        }
+        queryClient.invalidateQueries({ queryKey: ['userProgress', user.id, bookId] });
+        queryClient.invalidateQueries({ queryKey: ['userProgress', user.id] });
+      });
+  }, [user?.id, bookId, chapterId, chapter, chapters.length, loadingUserProgress, userProgress, queryClient]);
 
   useEffect(() => {
     async function checkPurchase() {
