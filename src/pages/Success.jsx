@@ -1,9 +1,7 @@
 import React from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
-import { BookOpen, CheckCircle } from 'lucide-react';
+import { BookOpen } from 'lucide-react';
 
 export default function Success() {
   const navigate = useNavigate();
@@ -13,31 +11,10 @@ export default function Success() {
   // Pegamos o ID do livro que o Stripe deve enviar na URL (ex: ?bookId=123)
   const bookId = searchParams.get('bookId');
 
-  // Buscar o último capítulo que o usuário estava lendo
-  const { data: userProgress } = useQuery({
-    queryKey: ['userProgress', user?.id, bookId],
-    queryFn: async () => {
-      if (!user?.id || !bookId) return null;
-      const { data } = await supabase
-        .from('user_progress')
-        .select('last_chapter_id')
-        .eq('user_id', user.id)
-        .eq('book_id', bookId)
-        .maybeSingle();
-      return data;
-    },
-    enabled: !!user?.id && !!bookId
-  });
-
   const handleAction = () => {
     if (user && bookId) {
-      // Se o usuário estava lendo um capítulo específico, vai direto para ele
-      if (userProgress?.last_chapter_id) {
-        navigate(`/Reader?bookId=${bookId}&chapterId=${userProgress.last_chapter_id}`);
-      } else {
-        // Caso contrário, vai para os detalhes do livro
-        navigate(`/BookDetails?id=${bookId}`);
-      }
+      // Se está logado, vai direto para os detalhes do livro para ler
+      navigate(`/BookDetails?id=${bookId}`);
     } else {
       // Se for novo, volta para a home para seguir o fluxo do e-mail
       navigate('/');
@@ -45,51 +22,150 @@ export default function Success() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 sm:p-6 bg-[#f9fafb]">
-      <div className="max-w-md w-full bg-white p-6 sm:p-8 md:p-10 rounded-2xl sm:rounded-3xl shadow-lg text-center">
-        <div className="text-5xl sm:text-6xl mb-4 sm:mb-5">✅</div>
+    <div style={{ 
+      minHeight: '100vh', 
+      display: 'flex', 
+      alignItems: 'center', 
+      justifyContent: 'center', 
+      padding: '20px',
+      fontFamily: 'sans-serif',
+      backgroundColor: '#f9fafb'
+    }}>
+      <div style={{ 
+        maxWidth: '480px', 
+        width: '100%', 
+        backgroundColor: 'white', 
+        padding: '40px', 
+        borderRadius: '32px', 
+        boxShadow: '0 20px 50px rgba(0,0,0,0.05)',
+        textAlign: 'center'
+      }}>
+        <div style={{ fontSize: '60px', marginBottom: '20px' }}>✅</div>
         
-        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mb-3 sm:mb-4 text-[#198D02]">
+        <h1 style={{ fontSize: '26px', fontWeight: 'bold', marginBottom: '15px', color: '#198D02' }}>
           Pagamento Confirmado!
         </h1>
 
         {user ? (
           /* CLIENTE LOGADO */
           <>
-            <p className="text-gray-600 text-sm sm:text-base mb-6 sm:mb-8 leading-relaxed px-2">
-              Parabéns! O acesso completo ao livro já foi liberado na sua conta <b className="break-all">{user.email}</b>.
+            <p style={{ color: '#4b5563', fontSize: '17px', marginBottom: '30px', lineHeight: '1.6' }}>
+              Parabéns! O acesso completo ao livro já foi liberado na sua conta <b>{user.email}</b>.
             </p>
 
             <button 
               onClick={handleAction} 
-              className="w-full bg-[#3065DF] hover:bg-[#1E4BB8] active:bg-[#1E4BB8] text-white py-4 sm:py-5 rounded-xl sm:rounded-2xl font-bold text-base sm:text-lg flex items-center justify-center gap-2 sm:gap-3 transition-all active:scale-[0.98] shadow-lg"
+              style={{ 
+                width: '100%',
+                backgroundColor: '#8b5cf6', 
+                color: 'white', 
+                padding: '18px', 
+                borderRadius: '16px', 
+                border: 'none',
+                fontWeight: 'bold', 
+                fontSize: '16px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '10px'
+              }}
             >
-              <BookOpen className="w-5 h-5 sm:w-6 sm:h-6" />
-              <span>Continuar para o Livro</span>
+              <BookOpen size={20} />
+              Continuar para o Livro
             </button>
           </>
         ) : (
           /* CLIENTE NOVO */
           <>
-            <p className="text-gray-600 text-sm sm:text-base mb-5 sm:mb-6 px-2">
+            <p style={{ color: '#4b5563', fontSize: '16px', marginBottom: '25px' }}>
               Seu acesso foi enviado para o e-mail cadastrado no <b>Stripe</b>.
             </p>
 
-            <div className="text-left bg-[#E2FFDE] p-4 sm:p-5 md:p-6 rounded-xl sm:rounded-2xl mb-6 sm:mb-8 border border-[#30A920]">
-              <p className="text-base sm:text-lg text-[#198D02] font-bold mb-3 sm:mb-4">
+            <div style={{ 
+              textAlign: 'left', 
+              backgroundColor: '#E2FFDE', 
+              padding: '20px', 
+              borderRadius: '20px', 
+              marginBottom: '24px',
+              border: '1px solid #30A920'
+            }}>
+              <p style={{ fontSize: '15px', color: '#198D02', fontWeight: 'bold', marginBottom: '12px' }}>
                 ➡️ Próximos passos:
               </p>
-              <p className="text-sm sm:text-base text-gray-700 mb-2.5 sm:mb-3 leading-relaxed">1. Acesse seu e-mail de compra.</p>
-              <p className="text-sm sm:text-base text-gray-700 mb-2.5 sm:mb-3 leading-relaxed">2. Procure por: <b>"Seu livro chegou! 📖"</b></p>
-              <p className="text-sm sm:text-base text-gray-700 leading-relaxed">3. Lá você encontrará seu <b>login, senha</b> e o <b>link exclusivo</b> para desbloquear todos os capítulos.</p>
+              <p style={{ fontSize: '14px', color: '#4b5563', margin: '8px 0', lineHeight: '1.5' }}>1. Acesse o e-mail cadastrado na compra.</p>
+              <p style={{ fontSize: '14px', color: '#4b5563', margin: '8px 0', lineHeight: '1.5' }}>2. Procure pelo assunto: <b>&quot;Seu acesso ao livro foi desbloqueado!&quot;</b></p>
+              <p style={{ fontSize: '14px', color: '#4b5563', margin: '8px 0', lineHeight: '1.5' }}>3. Abra a mensagem para pegar seu login e senha de acesso.</p>
+              <p style={{ fontSize: '14px', color: '#4b5563', margin: '12px 0 8px', lineHeight: '1.5' }}>⚠️ <b>Importante:</b> Se não encontrar, verifique sua caixa de <b>SPAM</b> e marque o <b>Romance no Bolso</b> como &quot;Não é lixo spam&quot;.</p>
+              <p style={{ fontSize: '14px', color: '#4b5563', margin: '8px 0', lineHeight: '1.5' }}>4. Use seu login e senha de acesso para entrar no site. <b>Clique na capa do livro que você estava lendo e pronto!</b> Todos os capítulos já estarão liberados para você aproveitar!</p>
             </div>
             
-            <button 
-              onClick={() => navigate('/')}
-              className="w-full bg-[#198D02] hover:bg-[#157A02] active:bg-[#157A02] text-white py-4 sm:py-5 rounded-xl sm:rounded-2xl font-bold text-base sm:text-lg transition-all active:scale-[0.98] shadow-lg"
-            >
-              Voltar ao Início
-            </button>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div style={{ display: 'flex', flexDirection: 'row', gap: '12px' }}>
+                <a
+                  href="https://mail.google.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ 
+                    flex: 1,
+                    backgroundColor: 'transparent', 
+                    color: '#FF0864', 
+                    padding: '14px 18px', 
+                    borderRadius: '16px', 
+                    border: '2px solid #FF0864',
+                    fontWeight: 'bold', 
+                    fontSize: '15px',
+                    cursor: 'pointer',
+                    textDecoration: 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxSizing: 'border-box'
+                  }}
+                >
+                  Abrir Gmail
+                </a>
+                <a
+                  href="https://outlook.live.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ 
+                    flex: 1,
+                    backgroundColor: 'transparent', 
+                    color: '#FF0864', 
+                    padding: '14px 18px', 
+                    borderRadius: '16px', 
+                    border: '2px solid #FF0864',
+                    fontWeight: 'bold', 
+                    fontSize: '15px',
+                    cursor: 'pointer',
+                    textDecoration: 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxSizing: 'border-box'
+                  }}
+                >
+                  Abrir Outlook
+                </a>
+              </div>
+              <button 
+                onClick={() => navigate('/')}
+                style={{ 
+                  width: '100%',
+                  backgroundColor: 'rgba(59, 130, 246, 1)', 
+                  color: 'white', 
+                  padding: '14px 18px', 
+                  borderRadius: '16px', 
+                  border: '1px solid rgba(0, 0, 0, 1)',
+                  fontWeight: 'bold', 
+                  fontSize: '15px',
+                  cursor: 'pointer'
+                }}
+              >
+                Voltar para o site
+              </button>
+            </div>
           </>
         )}
       </div>
