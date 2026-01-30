@@ -280,8 +280,8 @@ export default function Reader() {
         </div>
       </div>
 
-      {/* CONTEÚDO */}
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-3xl mx-auto px-4 sm:px-6 md:px-12 py-6 sm:py-8 md:py-10 pb-32 sm:pb-40">
+      {/* CONTEÚDO - padding inferior maior para a barra de navegação não cortar o texto */}
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-3xl mx-auto px-4 sm:px-6 md:px-12 py-6 sm:py-8 md:py-10 pb-44 sm:pb-52 md:pb-56">
         {canRead ? (
           <>
             {chapter.imagem_url && <img src={chapter.imagem_url} className="w-full rounded-xl sm:rounded-2xl mb-6 sm:mb-8 md:mb-10 shadow-sm" alt="Cena" />}
