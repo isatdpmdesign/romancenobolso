@@ -11,7 +11,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { ArrowLeft, Plus, Edit, Trash2, Save, X, BookOpen, FileText, Upload, Loader2, LayoutGrid, GripVertical, HelpCircle } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { ArrowLeft, Plus, Edit, Trash2, Save, X, BookOpen, FileText, Upload, Loader2, LayoutGrid, GripVertical, HelpCircle, Calendar } from "lucide-react";
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
@@ -33,14 +34,17 @@ export default function Admin() {
     author: '', 
     description: '', 
     category: '', 
-    classificacao: 'Livre',
+    classificacao: 'Livre', 
     cover_image: '', 
     cover_image_hero: '', 
     price: 20, 
     status: 'Publicado', 
-    link_stripe: '',
+    link_stripe: '', 
     secao_home: null,
-    data_lancamento: ''
+    data_lancamento: '',
+    serie_em_andamento: false,
+    proximo_capitulo_em: '',
+    cronograma_texto: ''
   });
 
   const [isUploading, setIsUploading] = useState(false);
@@ -177,7 +181,10 @@ export default function Admin() {
         capa_url: formData.cover_image_hero, status: formData.status === 'Publicado' ? 'published' : formData.status === 'Em Breve' ? 'coming_soon' : 'draft',
         link_stripe: formData.link_stripe, secao_home: formData.secao_home === 'Nenhuma' || !formData.secao_home ? null : formData.secao_home,
         data_lancamento: formData.status === 'Em Breve' && formData.data_lancamento ? formData.data_lancamento : null,
-        user_id: user.id
+        user_id: user.id,
+        serie_em_andamento: formData.serie_em_andamento ?? false,
+        proximo_capitulo_em: formData.serie_em_andamento && formData.proximo_capitulo_em ? formData.proximo_capitulo_em : null,
+        cronograma_texto: formData.serie_em_andamento && formData.cronograma_texto ? formData.cronograma_texto.trim() || null : null
       }]).select().single();
       
       if (error) throw error;
@@ -215,7 +222,10 @@ export default function Admin() {
         preco: formData.price, capa_vertical_url: formData.cover_image,
         capa_url: formData.cover_image_hero, status: newStatus, 
         link_stripe: formData.link_stripe, secao_home: formData.secao_home || null,
-        data_lancamento: formData.status === 'Em Breve' && formData.data_lancamento ? formData.data_lancamento : null
+        data_lancamento: formData.status === 'Em Breve' && formData.data_lancamento ? formData.data_lancamento : null,
+        serie_em_andamento: formData.serie_em_andamento ?? false,
+        proximo_capitulo_em: formData.serie_em_andamento && formData.proximo_capitulo_em ? formData.proximo_capitulo_em : null,
+        cronograma_texto: formData.serie_em_andamento && formData.cronograma_texto ? formData.cronograma_texto.trim() || null : null
       }).eq('id', id);
       
       // Se o livro foi publicado agora (mudou de status ou é novo), notificar usuários
@@ -338,7 +348,10 @@ export default function Admin() {
       status: 'Publicado', 
       link_stripe: '', 
       secao_home: null,
-      data_lancamento: ''
+      data_lancamento: '',
+      serie_em_andamento: false,
+      proximo_capitulo_em: '',
+      cronograma_texto: ''
     });
     setSelectedBook(null);
     setIsEditingBook(false);
@@ -363,7 +376,10 @@ export default function Admin() {
       status: statusForm, 
       link_stripe: book?.link_stripe || '', 
       secao_home: book?.secao_home || null,
-      data_lancamento: book?.data_lancamento || ''
+      data_lancamento: book?.data_lancamento || '',
+      serie_em_andamento: book?.serie_em_andamento ?? false,
+      proximo_capitulo_em: book?.proximo_capitulo_em ? book.proximo_capitulo_em.slice(0, 10) : '',
+      cronograma_texto: book?.cronograma_texto || ''
     });
     setSelectedBook(book);
     setIsEditingBook(true);
@@ -487,6 +503,38 @@ export default function Admin() {
                             className="rounded-xl h-12 border-gray-200" 
                           />
                         </div>
+                      )}
+                      <div className="flex items-center justify-between rounded-xl border border-gray-200 p-4 bg-gray-50/50">
+                        <div>
+                          <Label className="text-gray-700 font-normal">História em andamento</Label>
+                          <p className="text-xs text-gray-500 mt-0.5">Liberar capítulos aos poucos e avisar o leitor (ex: &quot;Novos capítulos segundas e quartas&quot;)</p>
+                        </div>
+                        <Switch
+                          checked={bookForm.serie_em_andamento ?? false}
+                          onCheckedChange={v => setBookForm({ ...bookForm, serie_em_andamento: v })}
+                        />
+                      </div>
+                      {bookForm.serie_em_andamento && (
+                        <>
+                          <div className="space-y-2">
+                            <Label className="text-gray-700 font-normal flex items-center gap-2"><Calendar className="w-4 h-4" /> Data do próximo capítulo</Label>
+                            <Input
+                              type="date"
+                              value={bookForm.proximo_capitulo_em || ''}
+                              onChange={e => setBookForm({ ...bookForm, proximo_capitulo_em: e.target.value })}
+                              className="rounded-xl h-12 border-gray-200"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-gray-700 font-normal">Cronograma (texto para o leitor)</Label>
+                            <Input
+                              value={bookForm.cronograma_texto || ''}
+                              onChange={e => setBookForm({ ...bookForm, cronograma_texto: e.target.value })}
+                              className="rounded-xl h-12 border-gray-200"
+                              placeholder="Ex: Novos capítulos segundas e quartas!"
+                            />
+                          </div>
+                        </>
                       )}
                       <div className="space-y-2">
                         <Label className="text-gray-700 font-normal">Seção da Home</Label>

@@ -309,6 +309,21 @@ export default function Reader() {
                 {chapter.conteudo || "..."}
               </ReactMarkdown>
             </div>
+
+            {!hasNext && book?.serie_em_andamento && (book?.proximo_capitulo_em || book?.cronograma_texto) && (
+              <div className="mt-10 rounded-2xl border bg-gradient-to-r from-[#E8EEFB] to-[#FFE5EE] dark:from-[#3065DF]/10 dark:to-[#FF0864]/10 p-6 text-center" style={{ borderColor: readerSettings.theme === 'dark' ? 'rgba(48,101,223,0.3)' : '#E8EEFB' }}>
+                <p className="text-sm font-medium opacity-80 mb-1" style={{ color: currentTheme.text }}>📖 Próximo capítulo</p>
+                {book.proximo_capitulo_em && (
+                  <p className="text-lg font-bold" style={{ color: currentTheme.text }}>
+                    {new Date(book.proximo_capitulo_em + 'T12:00:00').toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}
+                  </p>
+                )}
+                {book.cronograma_texto && (
+                  <p className="text-base mt-1" style={{ color: currentTheme.text }}>{book.cronograma_texto}</p>
+                )}
+                <p className="text-sm mt-3 opacity-70" style={{ color: currentTheme.text }}>Volte em breve para continuar a história.</p>
+              </div>
+            )}
           </>
         ) : (
           <>

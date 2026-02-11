@@ -1,4 +1,6 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/AuthContext';
 import { useQuery } from '@tanstack/react-query';
@@ -243,6 +245,36 @@ export default function Home() {
         ) : (
           /* LISTAGEM POR SEÇÕES DA HOME */
           <div className="space-y-12">
+            {(() => {
+              const ongoingSeries = (processedBooks || []).filter(
+                b => b.serie_em_andamento && (b.proximo_capitulo_em || b.cronograma_texto)
+              );
+              if (ongoingSeries.length === 0) return null;
+              return (
+                <div className="rounded-2xl bg-gradient-to-r from-[#3065DF]/10 to-[#FF0864]/10 border border-[#3065DF]/20 p-4 sm:p-5">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-[#3065DF] mb-2">📖 Novos capítulos em breve</p>
+                  <div className="flex flex-wrap gap-3">
+                    {ongoingSeries.map(book => (
+                      <Link
+                        key={book.id}
+                        to={createPageUrl('BookDetails') + `?id=${book.id}`}
+                        className="inline-flex items-center gap-2 bg-white/80 hover:bg-white rounded-xl px-3 py-2 text-sm font-medium text-gray-800 shadow-sm transition-colors"
+                      >
+                        <span className="truncate max-w-[180px] sm:max-w-none">{book.titulo}</span>
+                        {book.proximo_capitulo_em && (
+                          <span className="text-xs text-gray-500 shrink-0">
+                            {new Date(book.proximo_capitulo_em + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}
+                          </span>
+                        )}
+                        {book.cronograma_texto && !book.proximo_capitulo_em && (
+                          <span className="text-xs text-gray-500 shrink-0">{book.cronograma_texto}</span>
+                        )}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
             {isLoading ? (
                <div className="grid grid-cols-2 md:grid-cols-5 gap-4 sm:gap-5 md:gap-6">
                   {[...Array(5)].map((_, i) => <BookCardSkeleton key={i} />)}
