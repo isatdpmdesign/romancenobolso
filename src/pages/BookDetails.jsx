@@ -99,14 +99,7 @@ export default function BookDetails() {
         </div>
       </div>
 
-      {book.capa_url && (
-        <div className="relative w-full h-[25vh] sm:h-[30vh] md:h-[60vh]">
-            <img src={book.capa_url} alt={book.titulo} className="w-full h-full object-cover" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
-        </div>
-      )}
-
-      <div className={`max-w-3xl mx-auto px-3 sm:px-4 md:px-6 relative z-10 ${book.capa_url ? '-mt-16 sm:-mt-20 md:-mt-32' : 'mt-6 sm:mt-10'}`}>
+      <div className="max-w-3xl mx-auto px-3 sm:px-4 md:px-6 relative z-10 mt-6 sm:mt-10">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl shadow-2xl overflow-hidden mb-6 sm:mb-10">
           <div className="p-4 sm:p-6 md:p-8">
             <div className="flex flex-row gap-3 sm:gap-4 md:gap-6">

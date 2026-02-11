@@ -30,7 +30,6 @@ export default function Reader() {
   const [showChapters, setShowChapters] = useState(false);
   const [isPurchased, setIsPurchased] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
-  const [showLockedModal, setShowLockedModal] = useState(true);
   const queryClient = useQueryClient();
   const [readerSettings, setReaderSettings] = useState(() => {
     const saved = localStorage.getItem('readerSettings');
@@ -144,16 +143,20 @@ export default function Reader() {
     checkPurchase();
   }, [user, bookId, isAdmin]);
 
-  useEffect(() => {
-    if (!chapter || !chapterId) return;
-    const ok = isAdmin || chapter.is_gratuito || isPurchased;
-    if (!ok) setShowLockedModal(true);
-  }, [chapterId, isAdmin, isPurchased, chapter?.is_gratuito, chapter]);
-
   const handleNavigate = (nextOrPrevIndex) => {
     const targetChapter = chapters[nextOrPrevIndex];
     if (targetChapter) {
       navigate(`/Reader?bookId=${bookId}&chapterId=${targetChapter.id}`);
+      window.scrollTo(0, 0);
+    }
+  };
+
+  /** Ao terminar o áudio do capítulo, vai para o próximo e inicia o áudio automaticamente (reprodução contínua). */
+  const handleAudioEnded = () => {
+    if (!hasNext) return;
+    const targetChapter = chapters[currentIndex + 1];
+    if (targetChapter) {
+      navigate(`/Reader?bookId=${bookId}&chapterId=${targetChapter.id}&autoplay=true`);
       window.scrollTo(0, 0);
     }
   };
@@ -239,7 +242,7 @@ export default function Reader() {
   const priceFormatted = `R$ ${(Number(book?.preco) || 6.9).toFixed(2).replace('.', ',')}`;
 
   return (
-    <div className={`min-h-screen transition-colors duration-300 ${!isAdmin ? 'select-none' : ''}`} style={{ backgroundColor: currentTheme.bg }}>
+    <div className="min-h-screen transition-colors duration-300" style={{ backgroundColor: currentTheme.bg }}>
       
       {/* CABEÇALHO */}
       <div className="sticky top-0 z-30 shadow-sm border-b backdrop-blur-md bg-opacity-95 pointer-events-auto select-auto" style={{ backgroundColor: currentTheme.bg, borderColor: readerSettings.theme === 'dark' ? '#333' : '#f0f0f0' }}>
@@ -285,14 +288,23 @@ export default function Reader() {
         {canRead ? (
           <>
             {chapter.imagem_url && <img src={chapter.imagem_url} className="w-full rounded-xl sm:rounded-2xl mb-6 sm:mb-8 md:mb-10 shadow-sm" alt="Cena" />}
-            {chapter.audio_url && <div className="mb-8 sm:mb-10 md:mb-12"><AudioPlayer audioUrl={chapter.audio_url} chapterTitle={chapter.titulo} /></div>}
+            {chapter.audio_url && (
+              <div className="mb-8 sm:mb-10 md:mb-12">
+                <AudioPlayer
+                  audioUrl={chapter.audio_url}
+                  chapterTitle={chapter.titulo}
+                  onAudioEnded={handleAudioEnded}
+                  hasNextChapter={hasNext}
+                />
+              </div>
+            )}
             <div className="mb-8 sm:mb-12" style={{ color: currentTheme.text }}>
               <span className="text-[10px] uppercase tracking-[0.2em] opacity-50 font-bold block mb-2 sm:mb-3">
                 {book.titulo} • Capítulo {chapter.ordem}
               </span>
               <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-semibold leading-tight tracking-tight" style={{ fontFamily: currentFont }}>{chapter.titulo}</h2>
             </div>
-            <div className="reader-content">
+            <div className={`reader-content ${!isAdmin ? 'select-none' : ''}`}>
               <ReactMarkdown className="prose max-w-none" components={{ p: ({ children }) => <p className="mb-8" style={{ fontSize: `${readerSettings.fontSize}px`, lineHeight: readerSettings.lineHeight, fontFamily: currentFont, color: currentTheme.text }}>{children}</p> }}>
                 {chapter.conteudo || "..."}
               </ReactMarkdown>
@@ -306,35 +318,25 @@ export default function Reader() {
               </span>
               <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-semibold leading-tight tracking-tight" style={{ fontFamily: currentFont }}>{chapter.titulo}</h2>
             </div>
-            <div className="py-16 rounded-2xl bg-gray-100/80 dark:bg-gray-800/50 flex flex-col items-center justify-center gap-4" style={{ color: currentTheme.text }}>
-              <Lock className="w-12 h-12 opacity-40" />
-              <p className="text-sm opacity-70 text-center max-w-sm">Este capítulo é exclusivo para compradores do livro.</p>
+            <div className="py-10 sm:py-12 md:py-16 rounded-2xl bg-amber-50 border border-amber-200 flex flex-col items-center justify-center gap-4 sm:gap-5 text-center px-4" style={{ backgroundColor: readerSettings.theme === 'dark' ? 'rgba(120,53,15,0.2)' : undefined, borderColor: readerSettings.theme === 'dark' ? 'rgba(180,83,9,0.4)' : undefined }}>
+              <div className="w-16 h-16 sm:w-20 sm:h-20 bg-amber-100 rounded-full flex items-center justify-center mx-auto" style={{ backgroundColor: readerSettings.theme === 'dark' ? 'rgba(180,83,9,0.3)' : undefined }}>
+                <Lock className="w-8 h-8 sm:w-10 sm:h-10 text-amber-600" />
+              </div>
+              <div>
+                <h2 className="text-xl sm:text-2xl font-bold px-2" style={{ color: currentTheme.text }}>Você chegou ao final desta amostra!</h2>
+                <p className="text-sm sm:text-base mt-2 font-normal leading-relaxed px-2 opacity-80" style={{ color: currentTheme.text }}>Adquira o livro completo e tenha acesso a todos os capítulos!</p>
+              </div>
+              <div className="w-full max-w-xs rounded-2xl bg-gradient-to-r from-[#3065DF] to-[#FF0864] px-6 py-5 shadow-lg shadow-[#3065DF]/25 text-white">
+                <p className="text-xs font-medium uppercase tracking-wider text-white/90 mb-1">Preço do livro</p>
+                <p className="text-2xl sm:text-3xl font-bold text-white">{priceFormatted}</p>
+              </div>
+              <Button onClick={handleBuy} className="w-full max-w-xs bg-[#FF0864] hover:bg-[#D10050] text-white py-5 sm:py-6 rounded-xl sm:rounded-2xl font-bold text-base sm:text-lg shadow-lg shadow-pink-100 active:scale-[0.98]">
+                Comprar Livro Completo
+              </Button>
             </div>
           </>
         )}
       </motion.div>
-
-      {/* Modal capítulo bloqueado */}
-      <Dialog open={!canRead && showLockedModal} onOpenChange={setShowLockedModal}>
-        <DialogContent className="max-w-sm rounded-2xl sm:rounded-[32px] gap-0 p-0 overflow-hidden border-none shadow-2xl">
-          <div className="p-4 sm:p-6 md:p-8 pt-6 sm:pt-8 md:pt-10 pb-4 sm:pb-6 md:pb-8 text-center space-y-4 sm:space-y-5 md:space-y-6">
-            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-amber-50 rounded-full flex items-center justify-center mx-auto">
-              <Lock className="w-8 h-8 sm:w-10 sm:h-10 text-amber-500" />
-            </div>
-            <div>
-              <h2 className="text-xl sm:text-2xl font-bold text-gray-900 px-2">Você chegou ao final desta amostra!</h2>
-              <p className="text-xs sm:text-sm text-gray-500 mt-2 font-normal leading-relaxed px-2">Adquira o livro completo e tenha acesso a todos os capítulos!</p>
-            </div>
-            <div className="bg-gray-50 rounded-xl px-4 py-3 mx-2">
-              <p className="text-xs text-gray-500 mb-1">Preço do livro</p>
-              <p className="text-lg sm:text-xl font-bold text-gray-900">{priceFormatted}</p>
-            </div>
-            <Button onClick={handleBuy} className="w-full bg-[#FF0864] hover:bg-[#D10050] text-white py-5 sm:py-7 rounded-xl sm:rounded-2xl font-bold text-base sm:text-lg shadow-lg shadow-pink-100 mx-2 active:scale-[0.98]">
-              Comprar Livro Completo
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
 
       {/* Modal de Login */}
       <Dialog open={showLoginModal} onOpenChange={setShowLoginModal}>
@@ -409,7 +411,7 @@ export default function Reader() {
         </SheetContent>
       </Sheet>
 
-      <ReaderControls currentChapter={chapter.ordem} totalChapters={chapters.length} onPrevious={() => handleNavigate(currentIndex - 1)} onNext={() => handleNavigate(currentIndex + 1)} onShowChapters={() => setShowChapters(true)} hasPrevious={hasPrevious} hasNext={hasNext} progress={(chapter.ordem / chapters.length) * 100} user={user} />
+      <ReaderControls currentChapter={chapter.ordem} totalChapters={chapters.length} onPrevious={() => handleNavigate(currentIndex - 1)} onNext={() => handleNavigate(currentIndex + 1)} onShowChapters={() => setShowChapters(true)} hasPrevious={hasPrevious} hasNext={hasNext} />
     </div>
   );
 }

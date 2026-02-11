@@ -8,10 +8,11 @@ import { useAuth } from '@/lib/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { useQuery } from '@tanstack/react-query';
 
-import { Library, Search, X, HelpCircle, BookOpen } from 'lucide-react';
+import { Library, Search, X, HelpCircle, BookOpen, Download } from 'lucide-react';
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import AddToHomeOnboarding from "./components/onboarding/AddToHomeOnboarding";
 
 export default function Layout({ children, currentPageName }) {
   const { user, loading } = useAuth();
@@ -20,8 +21,11 @@ export default function Layout({ children, currentPageName }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
+  const [showPwaOnboarding, setShowPwaOnboarding] = useState(false);
   const searchRef = useRef(null);
   const suggestionsRef = useRef(null);
+
+  const isPwaStandalone = typeof window !== 'undefined' && window.matchMedia('(display-mode: standalone)').matches;
 
   // Buscar livros para autocomplete
   const { data: bookSuggestions = [] } = useQuery({
@@ -279,14 +283,23 @@ export default function Layout({ children, currentPageName }) {
                 ) : (
                   <>
                     <Link to="/Support">
-                      <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 hover:bg-[#FFE5EE] text-[#3065DF] touch-manipulation">
+                      <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 hover:bg-[#FFE5EE] text-[#3065DF] touch-manipulation flex-shrink-0">
                         <HelpCircle className="w-4 h-4 sm:w-5 sm:h-5" />
                       </Button>
                     </Link>
-                    {/* Botão Entrar agora é exibido em todas as páginas se deslogado */}
+                    {!isPwaStandalone && (
+                      <Button
+                        variant="outline"
+                        onClick={() => setShowPwaOnboarding(true)}
+                        className="h-8 sm:h-9 text-xs sm:text-sm px-2 sm:px-3 touch-manipulation active:scale-95 border-[#3065DF] text-[#3065DF] hover:bg-[#E8EEFB] flex-shrink-0"
+                      >
+                        <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
+                        Baixar app
+                      </Button>
+                    )}
                     <Button
                       onClick={() => navigate('/login')}
-                      className="bg-[#FF0864] hover:bg-[#D10050] h-8 sm:h-9 text-xs sm:text-sm px-3 sm:px-4 touch-manipulation active:scale-95"
+                      className="bg-[#FF0864] hover:bg-[#D10050] h-8 sm:h-9 text-xs sm:text-sm px-3 sm:px-4 touch-manipulation active:scale-95 flex-shrink-0"
                     >
                       Entrar
                     </Button>
@@ -300,6 +313,7 @@ export default function Layout({ children, currentPageName }) {
           {children}
         </main>
 
+        <AddToHomeOnboarding open={showPwaOnboarding} onOpenChange={setShowPwaOnboarding} />
       </div>
     </GeoBlock>
   );
