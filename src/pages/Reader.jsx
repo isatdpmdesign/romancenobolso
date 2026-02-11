@@ -52,14 +52,15 @@ export default function Reader() {
     enabled: !!bookId
   });
 
-  const { data: chapters = [] } = useQuery({
+  const { data: chaptersData } = useQuery({
     queryKey: ['chapters', bookId],
     queryFn: async () => {
       const { data } = await supabase.from('capitulos').select('id, titulo, ordem, is_gratuito').eq('livro_id', bookId).order('ordem', { ascending: true });
-      return data;
+      return Array.isArray(data) ? data : [];
     },
     enabled: !!bookId
   });
+  const chapters = chaptersData ?? [];
 
   const { data: chapter, isLoading: loadingChapter } = useQuery({
     queryKey: ['chapter', chapterId],
@@ -96,12 +97,13 @@ export default function Reader() {
   // Registrar livro em "Minha Estante" assim que o usuário logado começa a ler (sem progresso prévio).
   // O botão Salvar/marcar capítulo continua com a mesma regra (handleBookmark).
   useEffect(() => {
+    const list = Array.isArray(chapters) ? chapters : [];
     if (
       !user?.id ||
       !bookId ||
       !chapterId ||
       !chapter ||
-      !chapters.length ||
+      !list.length ||
       loadingUserProgress ||
       userProgress !== null
     ) {
@@ -110,7 +112,7 @@ export default function Reader() {
     if (hasAutoRegisteredRef.current) return;
     hasAutoRegisteredRef.current = true;
 
-    const progressPercent = Math.round((chapter.ordem / chapters.length) * 100);
+    const progressPercent = list.length ? Math.round((chapter.ordem / list.length) * 100) : 0;
     supabase
       .from('user_progress')
       .upsert(
@@ -132,7 +134,7 @@ export default function Reader() {
         queryClient.invalidateQueries({ queryKey: ['userProgress', user.id, bookId] });
         queryClient.invalidateQueries({ queryKey: ['userProgress', user.id] });
       });
-  }, [user?.id, bookId, chapterId, chapter, chapters.length, loadingUserProgress, userProgress, queryClient]);
+  }, [user?.id, bookId, chapterId, chapter, chapters, loadingUserProgress, userProgress, queryClient]);
 
   useEffect(() => {
     async function checkPurchase() {
@@ -144,7 +146,7 @@ export default function Reader() {
   }, [user, bookId, isAdmin]);
 
   const handleNavigate = (nextOrPrevIndex) => {
-    const targetChapter = chapters[nextOrPrevIndex];
+    const targetChapter = chaptersList[nextOrPrevIndex];
     if (targetChapter) {
       navigate(`/Reader?bookId=${bookId}&chapterId=${targetChapter.id}`);
       window.scrollTo(0, 0);
@@ -154,7 +156,7 @@ export default function Reader() {
   /** Ao terminar o áudio do capítulo, vai para o próximo e inicia o áudio automaticamente (reprodução contínua). */
   const handleAudioEnded = () => {
     if (!hasNext) return;
-    const targetChapter = chapters[currentIndex + 1];
+    const targetChapter = chaptersList[currentIndex + 1];
     if (targetChapter) {
       navigate(`/Reader?bookId=${bookId}&chapterId=${targetChapter.id}&autoplay=true`);
       window.scrollTo(0, 0);
@@ -178,8 +180,9 @@ export default function Reader() {
       return;
     }
     
-    if (!bookId || !chapterId || !chapter || !chapters.length) {
-      console.error('Dados faltando:', { bookId, chapterId, chapter: !!chapter, chaptersLength: chapters.length });
+    const listForBookmark = Array.isArray(chapters) ? chapters : [];
+    if (!bookId || !chapterId || !chapter || !listForBookmark.length) {
+      console.error('Dados faltando:', { bookId, chapterId, chapter: !!chapter, chaptersLength: listForBookmark.length });
       toast.error('Erro: dados do capítulo não encontrados.');
       return;
     }
@@ -205,7 +208,7 @@ export default function Reader() {
       }
       
       // Se não está marcado, marcar (criar/atualizar o progresso)
-      const progressPercent = Math.round((chapter.ordem / chapters.length) * 100);
+      const progressPercent = listForBookmark.length ? Math.round((chapter.ordem / listForBookmark.length) * 100) : 0;
       const { data, error } = await supabase
         .from('user_progress')
         .upsert(
@@ -235,10 +238,11 @@ export default function Reader() {
 
   if (!chapter || !book || loadingChapter) return <div className="min-h-screen flex items-center justify-center bg-white"><div className="animate-spin w-8 h-8 border-4 border-[#3065DF] border-t-transparent rounded-full" /></div>;
 
+  const chaptersList = Array.isArray(chapters) ? chapters : [];
   const canRead = isAdmin || (chapter && chapter.is_gratuito) || isPurchased;
-  const currentIndex = chapters.findIndex(c => c.id === chapterId);
+  const currentIndex = chaptersList.findIndex(c => c && c.id === chapterId);
   const hasPrevious = currentIndex > 0;
-  const hasNext = currentIndex < chapters.length - 1;
+  const hasNext = currentIndex >= 0 && currentIndex < chaptersList.length - 1;
   const priceFormatted = `R$ ${(Number(book?.preco) || 6.9).toFixed(2).replace('.', ',')}`;
 
   return (
@@ -394,7 +398,7 @@ export default function Reader() {
               <SheetTitle className="text-2xl sm:text-3xl font-bold text-[#1a1a1a]">Índice</SheetTitle>
             </SheetHeader>
             <div className="space-y-4">
-              {chapters.map((c) => {
+              {chaptersList.map((c) => {
                   const isActive = c.id === chapterId;
                   const isLocked = !c.is_gratuito && !isPurchased && !isAdmin;
                   const isRead = c.ordem < (chapter?.ordem || 0);
@@ -426,7 +430,7 @@ export default function Reader() {
         </SheetContent>
       </Sheet>
 
-      <ReaderControls currentChapter={chapter.ordem} totalChapters={chapters.length} onPrevious={() => handleNavigate(currentIndex - 1)} onNext={() => handleNavigate(currentIndex + 1)} onShowChapters={() => setShowChapters(true)} hasPrevious={hasPrevious} hasNext={hasNext} />
+      <ReaderControls currentChapter={chapter.ordem} totalChapters={chaptersList.length} onPrevious={() => handleNavigate(currentIndex - 1)} onNext={() => handleNavigate(currentIndex + 1)} onShowChapters={() => setShowChapters(true)} hasPrevious={hasPrevious} hasNext={hasNext} />
     </div>
   );
 }

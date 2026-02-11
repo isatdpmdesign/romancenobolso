@@ -19,14 +19,14 @@ export default function ReaderControls({
           {/* Progress bar com info */}
           <div className="flex items-center gap-3">
             <Progress 
-              value={(currentChapter / totalChapters) * 100} 
+              value={totalChapters > 0 ? (currentChapter / totalChapters) * 100 : 0} 
               className="h-1.5 flex-1 bg-gray-200 dark:bg-gray-700"
             />
             <button
               onClick={onShowChapters}
               className="flex items-center gap-1.5 text-xs font-medium text-gray-600 dark:text-gray-400 active:text-[#3065DF] min-w-fit touch-manipulation"
             >
-              <span>{currentChapter}/{totalChapters}</span>
+              <span>{currentChapter}/{totalChapters ?? 0}</span>
               <List className="w-4 h-4" />
             </button>
           </div>

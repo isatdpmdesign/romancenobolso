@@ -33,7 +33,7 @@ export default function BookDetails() {
   });
 
   // 2. BUSCAR CAPÍTULOS
-  const { data: chapters = [] } = useQuery({
+  const { data: chaptersData } = useQuery({
     queryKey: ['chapters', bookId],
     queryFn: async () => {
       const { data } = await supabase
@@ -41,10 +41,11 @@ export default function BookDetails() {
         .select('id, ordem, titulo')
         .eq('livro_id', bookId)
         .order('ordem', { ascending: true });
-      return data || [];
+      return Array.isArray(data) ? data : [];
     },
     enabled: !!bookId
   });
+  const chapters = Array.isArray(chaptersData) ? chaptersData : [];
 
   // 3. VERIFICAR SE JÁ COMPROU
   const { data: purchase } = useQuery({
