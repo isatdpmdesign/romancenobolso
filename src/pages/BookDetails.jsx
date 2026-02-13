@@ -126,6 +126,9 @@ export default function BookDetails() {
                 <div className="flex items-center gap-2 sm:gap-3 flex-wrap mb-4">
                   <span className="bg-gray-100 text-gray-700 text-xs sm:text-sm px-2 sm:px-3 py-1 rounded-md font-normal">{book.categoria}</span>
                   <span className="text-xs sm:text-sm text-gray-600 font-normal">📖 {chapters.length} capítulos</span>
+                  {book.serie_em_andamento && (
+                    <span className="bg-amber-50 dark:bg-amber-900/20 text-amber-800 dark:text-amber-200 text-xs sm:text-sm px-2 sm:px-3 py-1 rounded-md font-normal border border-amber-200 dark:border-amber-800/50">História em andamento</span>
+                  )}
                   {book.classificacao && (
                     <span className={`text-[10px] sm:text-xs font-medium px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-md text-white shadow-sm ${
                       book.classificacao === 'Livre' ? 'bg-green-500' :
