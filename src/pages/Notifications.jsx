@@ -27,6 +27,11 @@ const TYPE_CONFIG = {
     color: 'bg-green-100 text-green-600',
     label: 'Novo Livro'
   },
+  new_chapter: {
+    icon: BookOpen,
+    color: 'bg-emerald-100 text-emerald-600',
+    label: 'Novo Capítulo'
+  },
   book_coming_soon: {
     icon: Clock,
     color: 'bg-amber-100 text-amber-600',

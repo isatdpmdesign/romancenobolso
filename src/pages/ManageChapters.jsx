@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
-import { ArrowLeft, Save, Trash2, Plus, Music, Loader2, Upload, FileAudio, ImageIcon, X } from "lucide-react";
+import { ArrowLeft, Save, Trash2, Plus, Music, Loader2, Upload, FileAudio, ImageIcon, X, CalendarClock } from "lucide-react";
 import { toast } from "sonner";
 
 export default function ManageChapters() {
@@ -32,7 +32,9 @@ export default function ManageChapters() {
     ordem: 1,
     is_gratuito: false,
     audio_url: '',
-    imagem_url: '' // Novo campo para a capa do capítulo
+    imagem_url: '',
+    publicar_agora: true,
+    agendado_para: '' // datetime-local value (YYYY-MM-DDTHH:mm)
   });
 
   const [isUploadingAudio, setIsUploadingAudio] = useState(false);
@@ -113,6 +115,14 @@ export default function ManageChapters() {
         imagem_url: formData.imagem_url
       };
 
+      if (formData.publicar_agora) {
+        payload.publicado_em = new Date().toISOString();
+        payload.agendado_para = null;
+      } else {
+        payload.publicado_em = null;
+        payload.agendado_para = formData.agendado_para ? new Date(formData.agendado_para).toISOString() : null;
+      }
+
       if (selectedChapter) {
         await supabase.from('capitulos').update(payload).eq('id', selectedChapter.id);
         toast.success("Capítulo atualizado!");
@@ -138,10 +148,17 @@ export default function ManageChapters() {
   };
 
   // --- NAVEGAÇÃO ENTRE TELAS ---
+  const toDatetimeLocal = (iso) => {
+    if (!iso) return '';
+    const d = new Date(iso);
+    const pad = (n) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  };
+
   const openNewChapter = () => {
     const nextOrder = chapters.length > 0 ? chapters[chapters.length - 1].ordem + 1 : 1;
     setSelectedChapter(null);
-    setFormData({ titulo: '', conteudo: '', ordem: nextOrder, is_gratuito: false, audio_url: '', imagem_url: '' });
+    setFormData({ titulo: '', conteudo: '', ordem: nextOrder, is_gratuito: false, audio_url: '', imagem_url: '', publicar_agora: true, agendado_para: '' });
     setView('form');
   };
 
@@ -153,7 +170,9 @@ export default function ManageChapters() {
       ordem: chapter.ordem,
       is_gratuito: chapter.is_gratuito,
       audio_url: chapter.audio_url || '',
-      imagem_url: chapter.imagem_url || ''
+      imagem_url: chapter.imagem_url || '',
+      publicar_agora: !chapter.agendado_para,
+      agendado_para: toDatetimeLocal(chapter.agendado_para)
     });
     setView('form');
   };
@@ -195,7 +214,18 @@ export default function ManageChapters() {
                       <span className="bg-purple-100 text-purple-700 font-bold px-3 py-1 rounded-md">Cap. {chapter.ordem}</span>
                       <div>
                         <h3 className="font-semibold text-gray-900">{chapter.titulo}</h3>
-                        {chapter.is_gratuito && <span className="text-xs text-green-600 bg-green-50 px-2 py-0.5 rounded-full">Gratuito</span>}
+                        <div className="flex flex-wrap gap-1.5 mt-1">
+                          {chapter.is_gratuito && <span className="text-xs text-green-600 bg-green-50 px-2 py-0.5 rounded-full">Gratuito</span>}
+                          {chapter.agendado_para && !chapter.publicado_em && (
+                            <span className="text-xs text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full flex items-center gap-1">
+                              <CalendarClock className="w-3 h-3" />
+                              Agendado: {new Date(chapter.agendado_para).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                          )}
+                          {chapter.publicado_em && (
+                            <span className="text-xs text-gray-500">Publicado {new Date(chapter.publicado_em).toLocaleDateString('pt-BR')}</span>
+                          )}
+                        </div>
                       </div>
                     </div>
                     <div className="flex gap-2">
@@ -244,6 +274,34 @@ export default function ManageChapters() {
                <div className="flex items-center space-x-2 bg-gray-50 p-3 rounded-lg border">
                    <Switch id="free" checked={formData.is_gratuito} onCheckedChange={c => setFormData({...formData, is_gratuito: c})} />
                    <Label htmlFor="free" className="cursor-pointer">Capítulo Gratuito (Liberado para todos)</Label>
+               </div>
+
+               {/* Publicação: agora ou agendada */}
+               <div className="space-y-3 bg-gray-50 p-4 rounded-lg border">
+                   <Label className="flex items-center gap-2"><CalendarClock className="w-4 h-4" /> Publicação</Label>
+                   <div className="flex flex-wrap gap-4">
+                       <label className="flex items-center gap-2 cursor-pointer">
+                           <input type="radio" name="pub" checked={formData.publicar_agora} onChange={() => setFormData({ ...formData, publicar_agora: true, agendado_para: '' })} className="rounded-full" />
+                           <span>Publicar agora</span>
+                       </label>
+                       <label className="flex items-center gap-2 cursor-pointer">
+                           <input type="radio" name="pub" checked={!formData.publicar_agora} onChange={() => setFormData({ ...formData, publicar_agora: false })} className="rounded-full" />
+                           <span>Agendar publicação</span>
+                       </label>
+                   </div>
+                   {!formData.publicar_agora && (
+                       <div className="pt-2">
+                           <Label className="text-xs text-gray-600 block mb-1">Data e hora</Label>
+                           <Input
+                               type="datetime-local"
+                               value={formData.agendado_para}
+                               onChange={e => setFormData({ ...formData, agendado_para: e.target.value })}
+                               className="max-w-xs"
+                               min={new Date().toISOString().slice(0, 16)}
+                           />
+                           <p className="text-xs text-gray-500 mt-1">O sistema publica automaticamente nesse horário e envia notificação aos leitores.</p>
+                       </div>
+                   )}
                </div>
 
                {/* Uploads (Capa e Áudio) */}

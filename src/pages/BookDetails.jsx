@@ -40,6 +40,7 @@ export default function BookDetails() {
         .from('capitulos')
         .select('id, ordem, titulo')
         .eq('livro_id', bookId)
+        .not('publicado_em', 'is', null)
         .order('ordem', { ascending: true });
       return Array.isArray(data) ? data : [];
     },

@@ -55,7 +55,7 @@ export default function Reader() {
   const { data: chaptersData } = useQuery({
     queryKey: ['chapters', bookId],
     queryFn: async () => {
-      const { data } = await supabase.from('capitulos').select('id, titulo, ordem, is_gratuito').eq('livro_id', bookId).order('ordem', { ascending: true });
+      const { data } = await supabase.from('capitulos').select('id, titulo, ordem, is_gratuito').eq('livro_id', bookId).not('publicado_em', 'is', null).order('ordem', { ascending: true });
       return Array.isArray(data) ? data : [];
     },
     enabled: !!bookId
@@ -289,7 +289,12 @@ export default function Reader() {
 
       {/* CONTEÚDO - padding inferior maior para a barra de navegação não cortar o texto */}
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-3xl mx-auto px-4 sm:px-6 md:px-12 py-6 sm:py-8 md:py-10 pb-44 sm:pb-52 md:pb-56">
-        {canRead ? (
+        {chapter && !chapter.publicado_em && !isAdmin ? (
+          <div className="rounded-2xl bg-amber-50 border border-amber-200 dark:bg-amber-900/20 dark:border-amber-800/50 p-8 text-center">
+            <p className="text-amber-800 dark:text-amber-200 font-medium">Este capítulo ainda não foi publicado.</p>
+            <p className="text-sm text-amber-700 dark:text-amber-300 mt-2">Volte em breve ou confira outros capítulos.</p>
+          </div>
+        ) : canRead ? (
           <>
             {chapter.imagem_url && <img src={chapter.imagem_url} className="w-full rounded-xl sm:rounded-2xl mb-6 sm:mb-8 md:mb-10 shadow-sm" alt="Cena" />}
             {chapter.audio_url && (
